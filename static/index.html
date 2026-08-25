@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🇨🇳 MGTT - Shadowing & Chấm Điểm Phát Âm AI</title>
+    <meta name="description" content="MGTT - Nền tảng luyện nói tiếng Trung Shadowing qua video YouTube tự động hiển thị Hanzi, Pinyin, Dịch Việt và Chấm điểm phát âm bằng AI Gemini">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    
+    <!-- Google Fonts: Inter & Noto Sans SC for crisp Chinese typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom CSS with cache bust -->
+    <link rel="stylesheet" href="css/style.css?v=2.4">
+</head>
+<body class="dark-theme">
+    <!-- Background Ambient Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- App Container -->
+    <div class="app-layout">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-container">
+                <div class="brand-group">
+                    <div class="logo-img-wrapper">
+                        <img src="assets/logo.png" alt="MGTT" class="brand-logo-img" width="32" height="32">
+                    </div>
+                    <div class="brand-info">
+                        <h1 class="app-title">MGTT</h1>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <div class="status-badge" id="aiStatusBadge" title="Hệ thống AI đang hoạt động sẵn sàng">
+                        <span class="status-dot"></span>
+                        <span class="status-text">AI Sẵn Sàng</span>
+                    </div>
+
+                    <!-- Turn Counter Badge for FREE/PRO users -->
+                    <div class="turn-counter-badge" id="headerTurnBadge" title="Bấm để xem ưu đãi nâng cấp PRO">
+                        <i data-lucide="sparkles"></i>
+                        <span id="headerTurnText">3/3 Lượt Miễn Phí</span>
+                        <button class="badge-upgrade-btn" id="btnHeaderUpgradePro">Nâng Cấp</button>
+                    </div>
+
+                    <!-- User Profile & Authentication Container -->
+                    <div class="auth-header-container" id="authHeaderContainer">
+                        <!-- Sẽ được AuthManager render động: Nút Đăng Nhập hoặc User Profile Pill -->
+                        <button class="btn-login-trigger" id="btnLoginHeader">
+                            <i data-lucide="log-in"></i>
+                            <span>Đăng Nhập</span>
+                        </button>
+                    </div>
+
+                    <button class="icon-btn" id="btnOpenVocabNotebook" title="Sổ Từ Vựng Của Tôi (PRO)">
+                        <i data-lucide="book-open"></i>
+                    </button>
+
+                    <button class="icon-btn" id="btnOpenFavorites" title="Kho Câu Yêu Thích Của Tôi">
+                        <i data-lucide="bookmark"></i>
+                    </button>
+
+                    <button class="icon-btn" id="btnOpenSettings" title="Cài Đặt & Tài Khoản Của Tôi">
+                        <i data-lucide="settings"></i>
+                    </button>
+
+                    <button class="icon-btn" id="btnHelp" title="Hướng dẫn sử dụng">
+                        <i data-lucide="help-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Video Input & Sample Selector Section -->
+            <section class="url-input-section">
+                <div class="input-card glass-panel">
+                    <div class="input-row">
+                        <div class="url-input-wrapper">
+                            <svg class="input-icon yt-red" viewBox="0 0 24 24" width="22" height="22" fill="#ff0033" style="flex-shrink:0;"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            <input type="text" id="youtubeUrlInput" placeholder="Dán link YouTube tiếng Trung (VD: https://www.youtube.com/watch?v=...)" spellcheck="false" autocomplete="off">
+                            <button class="clear-btn" id="btnClearUrl" style="display:none;" title="Xóa">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" id="btnLoadVideo">
+                            <i data-lucide="sparkles"></i>
+                            <span>Tải Bài Học</span>
+                        </button>
+                    </div>
+
+                    <!-- Admin Published Lessons (Only shown if Admin pushed lessons) -->
+                    <div class="samples-container" id="samplesContainer" style="display: none;">
+                        <span class="samples-label"><i data-lucide="sparkles"></i> Bài học đề xuất:</span>
+                        <div class="samples-list" id="sampleVideosList">
+                            <!-- Populated dynamically from Admin -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace: 2-Column Grid (Video/Active Line on Left, Subtitle List on Right) -->
+            <div class="workspace-grid" id="workspaceArea">
+                
+                <!-- Left Column: Video Player & Shadowing Active Zone -->
+                <div class="player-column">
+                    
+                    <!-- YouTube Player Frame -->
+                    <div class="player-card glass-panel">
+                        <div class="video-container" id="videoPlayerContainer">
+                            <div id="youtubePlayer"></div>
+                            <!-- Player Overlay Placeholder when no video -->
+                            <div class="player-placeholder" id="playerPlaceholder">
+                                <div class="placeholder-content">
+                                    <div class="pulsing-play-icon">
+                                        <svg viewBox="0 0 24 24" width="32" height="32" fill="#ff0033"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                    </div>
+                                    <h3>Chưa có video nào được chọn</h3>
+                                    <p>Hãy dán link YouTube tiếng Trung hoặc chọn 1 bài học mẫu ở trên để bắt đầu luyện Shadowing.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Player Smart Controls Bar -->
+                        <div class="player-controls-bar">
+                            <div class="control-group">
+                                <button class="control-btn" id="btnPrevSentence" title="Câu trước (Skip Back)">
+                                    <i data-lucide="skip-back"></i>
+                                </button>
+                                <button class="control-btn play-toggle" id="btnPlayPause" title="Phát toàn bộ bài / Tạm dừng (Play All / Pause)">
+                                    <i data-lucide="play"></i>
+                                    <span class="play-btn-label">Phát Toàn Bài</span>
+                                </button>
+                                <button class="control-btn" id="btnNextSentence" title="Câu tiếp theo (Skip Forward)">
+                                    <i data-lucide="skip-forward"></i>
+                                </button>
+                                <button class="control-btn" id="btnLoopSentence" title="Bật/Tắt lặp lại câu này (Loop Sentence)">
+                                    <i data-lucide="repeat"></i>
+                                    <span class="toggle-indicator"></span>
+                                </button>
+                            </div>
+
+                            <div class="control-group right-group">
+                                <button class="control-btn btn-mute-toggle" id="btnToggleMute" title="Tắt / Bật tiếng video">
+                                    <i data-lucide="volume-2" id="muteIcon"></i>
+                                </button>
+
+                                <div class="switch-control" title="Bật: Tự động tạm dừng sau mỗi câu để nhại giọng | Tắt: Phát liên tục toàn bộ video">
+                                    <label class="switch">
+                                        <input type="checkbox" id="chkAutoPause">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span class="switch-label">Tự dừng</span>
+                                </div>
+
+                                <div class="speed-selector">
+                                    <span class="speed-label">Tốc độ:</span>
+                                    <select id="selectSpeed">
+                                        <option value="0.5">0.5x</option>
+                                        <option value="0.75">0.75x (Chậm)</option>
+                                        <option value="1.0" selected>1.0x (Chuẩn)</option>
+                                        <option value="1.25">1.25x</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Shadowing Focus Card -->
+                    <div class="active-sentence-card glass-panel" id="activeSentenceCard">
+                        <div class="card-header">
+                            <div class="sentence-index-badge">
+                                <i data-lucide="disc"></i>
+                                <span id="currentSentenceIndexText">Chưa tải bài học</span>
+                            </div>
+                            <div class="card-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                                <button class="btn-fav-star" id="btnToggleFavorite" title="Lưu câu này vào danh mục yêu thích">
+                                    <i data-lucide="star"></i>
+                                </button>
+                                <div class="timestamp-badge" id="currentTimestampBadge">
+                                    --:--
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Interactive Chinese Sentence Display -->
+                        <div class="sentence-showcase">
+                            <!-- Pinyin Row -->
+                            <div class="pinyin-display" id="activePinyinDisplay">
+                                (Chờ dán link YouTube để tải Pinyin)
+                            </div>
+                            <!-- Hanzi Row with Individual Character Highlighting -->
+                            <div class="hanzi-display" id="activeHanziDisplay">
+                                请粘贴YouTube链接开始练习
+                            </div>
+                            <!-- Vietnamese Translation Row -->
+                            <div class="vietnamese-display" id="activeVnDisplay">
+                                Dán đường link video YouTube tiếng Trung ở thanh phía trên để bắt đầu luyện Shadowing.
+                            </div>
+                        </div>
+
+                        <!-- Practice Turn Quota Status Indicator -->
+                        <div class="turn-status-bar" id="practiceTurnStatus">
+                            <i data-lucide="sparkles"></i>
+                            <span id="practiceTurnText">🎁 Dùng thử AI: Còn 3/3 lượt miễn phí</span>
+                            <button class="link-btn-upgrade" id="btnPracticeUpgrade">Nâng cấp PRO</button>
+                        </div>
+
+                        <!-- Shadowing Interactive Audio Actions -->
+                        <div class="shadowing-actions">
+                            <button class="action-btn listen-native-btn" id="btnListenNative" title="Nghe người bản xứ phát âm mẫu câu này">
+                                <i data-lucide="volume-2"></i>
+                                <span>Nghe Phát Âm Mẫu</span>
+                            </button>
+
+                            <button class="action-btn record-mic-btn" id="btnRecordVoice">
+                                <div class="mic-pulse-ring"></div>
+                                <i data-lucide="mic" id="micIcon"></i>
+                                <span id="micBtnText">Bấm Để Ghi Âm & Chấm Điểm</span>
+                            </button>
+
+                            <button class="action-btn flashcard-trigger-btn" id="btnOpenFlashcards" title="Tạo bộ thẻ Flashcard 3D từ video (Đặc quyền PRO)">
+                                <i data-lucide="layers"></i>
+                                <span>🎴 Flashcard AI (PRO)</span>
+                            </button>
+                        </div>
+
+                        <!-- Real-time Recording Status & Live Wave -->
+                        <div class="recording-bar" id="recordingStatusBar" style="display:none;">
+                            <div class="rec-dot"></div>
+                            <span class="rec-text" id="recStatusText">Đang lắng nghe giọng đọc của bạn...</span>
+                            <div class="wave-visualizer">
+                                <span></span><span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right Column: Subtitles Stream / Karaoke List -->
+                <div class="subtitles-column">
+                    <div class="subtitles-card glass-panel">
+                        <div class="subtitles-header">
+                            <div class="sub-title-group" style="display: flex; align-items: center; gap: 8px;">
+                                <h3><i data-lucide="list-music"></i> Danh Sách Câu Thoại (<span id="subCount">0</span>)</h3>
+                                <button class="btn-scroll-lock" id="btnToggleScrollLock" title="Khóa/Mở tự động cuộn theo video để đọc các câu phía trên">
+                                    <i data-lucide="unlock" id="scrollLockIcon"></i>
+                                    <span id="scrollLockText">Tự Cuộn</span>
+                                </button>
+                            </div>
+                            <div class="sub-search-box">
+                                <i data-lucide="search"></i>
+                                <input type="text" id="subSearchInput" placeholder="Tìm câu hoặc Pinyin...">
+                            </div>
+                        </div>
+
+                        <!-- Subtitle List Container -->
+                        <div class="subtitles-scroll-list" id="subtitlesList">
+                            <div class="empty-sub-state">
+                                <i data-lucide="message-square-dashed"></i>
+                                <p>Chưa có phụ đề. Vui lòng tải video để hiển thị phụ đề và Pinyin.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- AI Evaluation Result Modal -->
+        <div class="modal-backdrop" id="evaluationModal" style="display: none;">
+            <div class="modal-glass-card">
+                <button class="modal-close-btn" id="btnCloseModal">
+                    <i data-lucide="x"></i>
+                </button>
+
+                <div class="modal-header">
+                    <div class="ai-badge">
+                        <i data-lucide="sparkles"></i>
+                        <span>KẾT QUẢ CHẤM ĐIỂM PHÁT ÂM AI</span>
+                    </div>
+                    <h2 id="evalModalTitle">Đánh Giá Phát Âm Chi Tiết</h2>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Score Overview Card -->
+                    <div class="score-overview-section">
+                        <div class="overall-circle-gauge" id="overallGauge">
+                            <div class="score-number" id="overallScoreNum">92</div>
+                            <div class="score-label">ĐIỂM TỔNG</div>
+                        </div>
+
+                        <div class="sub-metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-icon tone-icon"><i data-lucide="activity"></i></div>
+                                <div class="metric-data">
+                                    <span class="metric-val" id="toneScoreNum">88%</span>
+                                    <span class="metric-name">Chuẩn Thanh Điệu (Tones)</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon fluency-icon"><i data-lucide="zap"></i></div>
+                                <div class="metric-data">
+                                    <span class="metric-val" id="fluencyScoreNum">94%</span>
+                                    <span class="metric-name">Lưu Loát & Tự Nhiên</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon accuracy-icon"><i data-lucide="check-circle-2"></i></div>
+                                <div class="metric-data">
+                                    <span class="metric-val" id="accuracyScoreNum">90%</span>
+                                    <span class="metric-name">Độ Khớp Âm Chuẩn</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Speech Comparison -->
+                    <div class="speech-comparison-box">
+                        <div class="comp-row">
+                            <span class="comp-label">Câu mẫu:</span>
+                            <span class="comp-text target" id="evalTargetText">你好世界</span>
+                        </div>
+                        <div class="comp-row">
+                            <span class="comp-label">AI nghe bạn đọc:</span>
+                            <span class="comp-text heard" id="evalHeardText">nǐ hǎo shì jiè</span>
+                        </div>
+                    </div>
+
+                    <!-- Pronunciation Errors Breakdown -->
+                    <div class="errors-section" id="errorsSection">
+                        <h4><i data-lucide="alert-triangle"></i> Chi tiết từ cần chỉnh sửa:</h4>
+                        <div class="error-items-list" id="errorItemsList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- AI Feedback & Encouragement in Vietnamese -->
+                    <div class="ai-feedback-box">
+                        <div class="feedback-icon"><i data-lucide="quote"></i></div>
+                        <p class="feedback-content" id="aiFeedbackText">
+                            Bạn phát âm rất chuẩn thanh 1 và thanh 4! Chú ý hạ thấp giọng hơn ở thanh 3 để câu nói tự nhiên như người bản xứ.
+                        </p>
+                    </div>
+
+                    <!-- Turn Quota Feedback in Eval Modal -->
+                    <div class="eval-turn-status-box" id="evalTurnStatusBox">
+                        <div class="turn-status-content">
+                            <i data-lucide="sparkles" style="color: #fbbf24; width: 18px; height: 18px; flex-shrink: 0;"></i>
+                            <span id="evalTurnStatusText">🎁 Bạn còn 2/3 lượt AI miễn phí. Nâng cấp PRO để luyện tập không giới hạn!</span>
+                        </div>
+                        <button class="btn-eval-upgrade" id="btnEvalUpgradePro">
+                            <i data-lucide="crown" style="width: 14px; height: 14px;"></i>
+                            <span>Nâng Cấp PRO (2.000đ)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="btnRetryPronounce">
+                        <i data-lucide="rotate-ccw"></i>
+                        <span>Thử Đọc Lại</span>
+                    </button>
+                    <button class="btn btn-primary" id="btnNextAfterEval">
+                        <span>Luyện Câu Tiếp Theo</span>
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div class="modal-backdrop" id="helpModal" style="display:none;">
+            <div class="modal-glass-card help-card">
+                <button class="modal-close-btn" id="btnCloseHelpModal"><i data-lucide="x"></i></button>
+                <div class="modal-header">
+                    <h2>🇨🇳 Phương Pháp Luyện Shadowing Tiếng Trung</h2>
+                </div>
+                <div class="modal-body help-body">
+                    <div class="help-step">
+                        <div class="step-num">1</div>
+                        <div class="step-desc">
+                            <strong>Dán link hoặc Chọn bài học mẫu</strong>
+                            <p>Hệ thống sẽ tự động bóc tách chữ Hán, tạo Pinyin có thanh điệu chuẩn và dịch nghĩa Tiếng Việt tương ứng.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-num">2</div>
+                        <div class="step-desc">
+                            <strong>Nghe & Bật chế độ "Tự dừng nhại câu"</strong>
+                            <p>Video sẽ tự dừng ở cuối mỗi câu. Hãy lắng nghe khẩu hình, ngữ điệu và nhại lại (Shadowing) ngay lập tức.</p>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-num">3</div>
+                        <div class="step-desc">
+                            <strong>Ghi âm & Nhận chấm điểm AI</strong>
+                            <p>Bấm nút micro để đọc. Google AI Studio (Gemini) sẽ chấm điểm chính xác thanh 1, 2, 3, 4 và chỉ ra mẹo sửa lỗi bằng tiếng Việt.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Authentication Modal (Firebase Google & Email OTP) -->
+        <div class="modal-overlay" id="authModal" style="display:none;">
+            <div class="modal-card glass-panel auth-card">
+                <button class="modal-close-btn" id="btnCloseAuthModal">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="auth-modal-header">
+                    <div class="auth-logo-badge">
+                        <img src="assets/logo.png" alt="Logo" width="44" height="44" style="border-radius:50%; object-fit:cover;">
+                    </div>
+                    <h2>Đăng Nhập Học Tiếng Trung</h2>
+                    <p>Đăng nhập để tự động tải video, bóc tách phụ đề và chấm điểm AI không giới hạn</p>
+                </div>
+
+                <div class="auth-modal-body">
+                    <!-- Google Quick Sign-In Button -->
+                    <button class="btn-google-login" id="btnGoogleLogin">
+                        <svg class="google-svg-icon" viewBox="0 0 48 48" width="22" height="22">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        <span>Đăng nhập nhanh bằng Google</span>
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>Hoặc đăng nhập bằng Email & Nhận Mã OTP</span>
+                    </div>
+
+                    <!-- Email Step 1: Send OTP -->
+                    <div id="emailStepSend" class="auth-step-container">
+                        <div class="auth-input-group">
+                            <label for="authEmailInput">Địa chỉ Email của bạn</label>
+                            <div class="auth-input-wrapper">
+                                <i data-lucide="mail"></i>
+                                <input type="email" id="authEmailInput" placeholder="name@gmail.com" autocomplete="email">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-auth-action" id="btnSendOtp">
+                            <i data-lucide="send"></i>
+                            <span>Gửi Mã Xác Nhận OTP</span>
+                        </button>
+                    </div>
+
+                    <!-- Email Step 2: Verify 6-digit OTP -->
+                    <div id="emailStepVerify" class="auth-step-container" style="display:none;">
+                        <div class="otp-instruction">
+                            <p>Nhập mã xác nhận 6 số đã gửi tới <strong id="otpTargetEmail">email@gmail.com</strong></p>
+                        </div>
+                        <div class="otp-inputs-grid">
+                            <input type="text" maxlength="1" class="otp-box" id="otp_1" autofocus>
+                            <input type="text" maxlength="1" class="otp-box" id="otp_2">
+                            <input type="text" maxlength="1" class="otp-box" id="otp_3">
+                            <input type="text" maxlength="1" class="otp-box" id="otp_4">
+                            <input type="text" maxlength="1" class="otp-box" id="otp_5">
+                            <input type="text" maxlength="1" class="otp-box" id="otp_6">
+                        </div>
+                        <div class="otp-demo-hint" id="otpDemoHint"></div>
+                        <button class="btn btn-primary btn-auth-action" id="btnVerifyOtp">
+                            <i data-lucide="check-circle-2"></i>
+                            <span>Xác Nhận & Bắt Đầu Học</span>
+                        </button>
+                        <div class="otp-actions-row">
+                            <button class="link-btn" id="btnResendOtp">Gửi lại mã</button>
+                            <button class="link-btn" id="btnChangeEmail">Đổi Email khác</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings & User Account Modal -->
+        <div class="modal-overlay" id="settingsModal" style="display:none;">
+            <div class="modal-card glass-panel settings-card">
+                <button class="modal-close-btn" id="btnCloseSettingsModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="settings-modal-header">
+                    <div class="settings-title-row">
+                        <i data-lucide="user-check" class="settings-header-icon"></i>
+                        <h2>Tài Khoản & Cài Đặt</h2>
+                    </div>
+                    <p>Quản lý hồ sơ cá nhân và các gói tính năng luyện nói Shadowing</p>
+                </div>
+
+                <div class="settings-modal-body">
+                    <!-- Current User Info Section -->
+                    <div class="account-profile-box" id="settingsProfileBox">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=freeuser" alt="Avatar" class="account-avatar-large" id="settingsAvatarImg">
+                        <div class="account-details-col">
+                            <div class="account-name-row">
+                                <h3 id="settingsUserName">Khách Học Viên</h3>
+                                <span class="badge-plan-status" id="settingsPlanBadge">🌱 Gói FREE</span>
+                            </div>
+                            <p class="account-email" id="settingsUserEmail">Chưa đăng nhập</p>
+                            <p class="account-reg-date" id="settingsRegDate">Bắt đầu từ: Hôm nay</p>
+                        </div>
+                    </div>
+
+                    <!-- Cloud Multi-Device Sync Banner -->
+                    <div class="cloud-sync-banner" id="cloudSyncBanner" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i data-lucide="cloud-check" style="color: var(--primary-cyan); width: 22px; height: 22px; flex-shrink: 0;"></i>
+                            <div>
+                                <div style="font-size: 0.84rem; font-weight: 700; color: #ffffff;" id="cloudSyncStatusTitle">Đồng Bộ Cloud Đa Thiết Bị</div>
+                                <div style="font-size: 0.76rem; color: var(--text-secondary);" id="cloudSyncStatusDesc">Đăng nhập cùng 1 Gmail trên bất kỳ điện thoại nào để giữ nguyên PRO, Sổ từ vựng & Câu yêu thích</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" id="btnManualSync" style="padding: 6px 12px; font-size: 0.78rem; border-color: rgba(0, 242, 254, 0.3); flex-shrink: 0;">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                            <span>Đồng Bộ</span>
+                        </button>
+                    </div>
+
+                    <!-- PRO Pricing Plans Section -->
+                    <div class="pro-plans-section">
+                        <div class="pro-section-title-row">
+                            <div>
+                                <h4>💎 Nâng Cấp Tài Khoản PRO <span class="badge-hot">Mở Khóa Toàn Bộ</span></h4>
+                                <p class="pro-section-desc">Mở khóa AI Flashcard từ video, phân tích thanh điệu chuyên sâu và không giới hạn</p>
+                            </div>
+                        </div>
+
+                        <div class="pro-cards-grid">
+                            <!-- Plan 1: 2k / 7 days -->
+                            <div class="pro-pricing-card card-week">
+                                <div class="card-plan-header">
+                                    <span class="plan-tag">GÓI TUẦN</span>
+                                    <div class="plan-price">
+                                        <span class="currency">2.000đ</span>
+                                        <span class="unit">/ 7 ngày</span>
+                                    </div>
+                                </div>
+                                <div class="plan-validity">
+                                    <i data-lucide="calendar"></i>
+                                    <span>Bắt đầu từ ngày đăng ký ... đến hết 7 ngày</span>
+                                </div>
+                                <ul class="plan-perks-list">
+                                    <li><i data-lucide="check"></i> Mở khóa Flashcard 3D từ video</li>
+                                    <li><i data-lucide="check"></i> Luyện nói AI không giới hạn</li>
+                                    <li><i data-lucide="check"></i> Nhận diện phát âm chuẩn xác 100%</li>
+                                </ul>
+                                <button class="btn btn-primary btn-select-plan" id="btnSelectWeekPlan" style="padding: 10px;">
+                                    <i data-lucide="zap"></i>
+                                    <span>Nâng Cấp 2.000đ</span>
+                                </button>
+                            </div>
+
+                            <!-- Plan 2: 3k / 1 month -->
+                            <div class="pro-pricing-card card-month featured">
+                                <div class="featured-ribbon">SIÊU TIẾT KIỆM</div>
+                                <div class="card-plan-header">
+                                    <span class="plan-tag gold">GÓI THÁNG</span>
+                                    <div class="plan-price">
+                                        <span class="currency gold">3.000đ</span>
+                                        <span class="unit">/ 1 tháng</span>
+                                    </div>
+                                </div>
+                                <div class="plan-validity">
+                                    <i data-lucide="calendar"></i>
+                                    <span>Bắt đầu từ ngày đăng ký ... đến hết 30 ngày</span>
+                                </div>
+                                <ul class="plan-perks-list">
+                                    <li><i data-lucide="check"></i> Toàn bộ quyền lợi gói Tuần</li>
+                                    <li><i data-lucide="check"></i> Tạo Flashcard AI không giới hạn video</li>
+                                    <li><i data-lucide="check"></i> Tự động trích xuất hội thoại siêu tốc</li>
+                                    <li><i data-lucide="check"></i> Ưu tiên phân tích AI phản hồi tức thì</li>
+                                </ul>
+                                <button class="btn btn-primary btn-select-plan" id="btnSelectMonthPlan" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; padding: 10px; color: #000; font-weight: 800;">
+                                    <i data-lucide="crown"></i>
+                                    <span>Nâng Cấp 3.000đ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Preferences -->
+                    <div class="settings-options-group">
+                        <div class="settings-opt-item">
+                            <div>
+                                <strong>Hiệu ứng Karaoke nhấp nháy chữ Hán</strong>
+                                <p>Sáng từng chữ Hán theo ngữ điệu giọng nói video</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="settingKaraoke" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="settings-modal-actions">
+                        <button class="btn btn-secondary" id="btnSettingsLogout" style="color:var(--accent-red); border-color:rgba(239,68,68,0.4);">
+                            <i data-lucide="log-out"></i>
+                            <span>Đăng Xuất Tài Khoản</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Favorites Modal (Kho Câu Yêu Thích) -->
+        <div class="modal-overlay" id="favoritesModal" style="display:none;">
+            <div class="modal-card glass-panel favorites-card" style="max-width: 650px;">
+                <button class="modal-close-btn" id="btnCloseFavoritesModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="favorites-modal-header">
+                    <div class="favorites-title-row" style="display: flex; align-items: center; gap: 10px;">
+                        <i data-lucide="bookmark-check" style="color: #fbbf24; width: 26px; height: 26px;"></i>
+                        <h2>Kho Câu Yêu Thích Của Tôi (<span id="favCount">0</span>)</h2>
+                    </div>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 4px;">
+                        Danh sách các câu thoại bạn đã đánh dấu ⭐ để ôn luyện nhanh bất kỳ lúc nào
+                    </p>
+                </div>
+
+                <div class="favorites-modal-body" style="max-height: 60vh; overflow-y: auto; margin-top: 16px;">
+                    <div class="favorites-list" id="favoritesList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="empty-fav-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i data-lucide="star-off" style="width: 36px; height: 36px; margin-bottom: 8px;"></i>
+                            <p>Bạn chưa lưu câu nào. Hãy bấm ngôi sao ⭐ trên câu thoại để lưu vào đây nhé!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D AI Flashcards Modal (Đặc quyền PRO) -->
+        <div class="modal-overlay" id="flashcardsModal" style="display:none;">
+            <div class="modal-card glass-panel flashcards-card" style="max-width: 580px; text-align: center;">
+                <button class="modal-close-btn" id="btnCloseFlashcardsModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="flashcards-modal-header" style="margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="sparkles" style="color: var(--primary-cyan);"></i>
+                            <h2 style="font-size: 1.2rem; font-weight: 800;" id="flashcardModalTitle">Flashcard AI Từ Video</h2>
+                            <span class="tag-pill gold" style="font-size: 0.68rem; font-weight: 800;">PRO VIP</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <select id="selectFlashcardTargetFolder" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(251,191,36,0.5); color: #fbbf24; font-size: 0.76rem; border-radius: var(--radius-sm); padding: 5px 8px; outline: none; cursor: pointer;">
+                                <option value="Mặc định">📁 Thư mục: Mặc định</option>
+                            </select>
+                            <button class="btn btn-secondary" id="btnSaveAllFlashcardsToNotebook" title="Lưu toàn bộ từ vựng vào Thư mục đã chọn" style="padding: 5px 10px; font-size: 0.76rem; border-color: #fbbf24; color: #fbbf24; gap: 4px;">
+                                <i data-lucide="folder-plus" style="width:14px; height:14px;"></i>
+                                <span id="btnSaveAllFcText">⭐ Lưu Tất Cả</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: left;">
+                        Chạm vào thẻ để lật mặt xem Pinyin, Nghĩa tiếng Việt và Ví dụ hội thoại.
+                    </p>
+                </div>
+
+                <!-- Flashcard 3D Flip Container -->
+                <div class="flashcard-scene" id="flashcardScene">
+                    <div class="flashcard-card-3d" id="flashcardElement">
+                        <!-- Front Face -->
+                        <div class="flashcard-face flashcard-front">
+                            <span class="flashcard-badge-level" id="fcFrontLevel">HSK Từ Vựng</span>
+                            <div class="flashcard-hanzi" id="fcFrontHanzi">你好</div>
+                            <div class="flashcard-hint">
+                                <i data-lucide="rotate-3d"></i>
+                                <span>Chạm để lật mặt sau</span>
+                            </div>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="flashcard-face flashcard-back">
+                            <div class="flashcard-pinyin-back" id="fcBackPinyin">nǐ hǎo</div>
+                            <div class="flashcard-vn-back" id="fcBackVn">Xin chào</div>
+                            <div class="flashcard-example-box">
+                                <div class="fc-ex-hanzi" id="fcBackSentence">你好！欢迎来到中文练习。</div>
+                                <div class="fc-ex-vn" id="fcBackSentenceVn">Xin chào! Chào mừng bạn đến với bài học.</div>
+                            </div>
+                            <button class="btn-fc-speak" id="btnFcSpeak" title="Nghe phát âm">
+                                <i data-lucide="volume-2"></i>
+                                <span>Nghe Phát Âm</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flashcard Controls -->
+                <div class="flashcard-controls-row" style="display: flex; align-items: center; justify-content: space-between; margin-top: 20px;">
+                    <button class="btn btn-secondary" id="btnPrevFc" style="padding: 8px 16px;">
+                        <i data-lucide="chevron-left"></i>
+                        <span>Thẻ Trước</span>
+                    </button>
+                    <div class="flashcard-counter" id="fcCounter" style="font-weight: 800; color: var(--primary-cyan); font-family: 'JetBrains Mono', monospace;">
+                        1 / 10
+                    </div>
+                    <button class="btn btn-primary" id="btnNextFc" style="padding: 8px 16px;">
+                        <span>Thẻ Kế</span>
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Detail Modal (Tra Cứu Từ Vựng Đa Nghĩa - PRO) -->
+        <div class="modal-overlay" id="vocabDetailModal" style="display:none;">
+            <div class="modal-card glass-panel vocab-detail-card">
+                <button class="modal-close-btn" id="btnCloseVocabModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="vocab-header-row">
+                    <div>
+                        <div class="vocab-word-large" id="vocabDetailHanzi">播客</div>
+                        <div class="vocab-pinyin-large" id="vocabDetailPinyin">bō kè</div>
+                        <div class="vocab-tags-group" id="vocabDetailTags">
+                            <span class="tag-pill cyan" id="vocabDetailType">Danh từ</span>
+                            <span class="tag-pill gold" id="vocabDetailLevel">HSK 4 / Khẩu ngữ</span>
+                        </div>
+                    </div>
+                    <button class="icon-btn" id="btnVocabSpeak" title="Nghe phát âm từ này" style="width:46px; height:46px; background:rgba(0,242,254,0.15); border-color:var(--primary-cyan); color:var(--primary-cyan);">
+                        <i data-lucide="volume-2" style="width:22px; height:22px;"></i>
+                    </button>
+                </div>
+
+                <div class="vocab-meanings-box">
+                    <strong style="color: #fbbf24; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="book-marked" style="width: 16px; height: 16px;"></i>
+                        <span>Các Tầng Nghĩa & Giải Thích Chi Tiết:</span>
+                    </strong>
+                    <div class="vocab-meanings-list" id="vocabDetailMeaningsList">
+                        <!-- Render dynamic list of meanings -->
+                    </div>
+                </div>
+
+                <div class="vocab-example-container" id="vocabExampleContainer">
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 2px;">Ngữ cảnh trong video:</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff;" id="vocabDetailExampleHanzi">他们也常常听我们的播客。</div>
+                    <div style="font-size: 0.82rem; color: var(--primary-cyan);" id="vocabDetailExamplePinyin">tā men yě cháng cháng tīng wǒ men de bō kè 。</div>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;" id="vocabDetailExampleVn">Họ cũng thường xuyên nghe podcast của chúng ta.</div>
+                </div>
+
+                <div class="vocab-actions-row" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 0 10px;">
+                        <i data-lucide="folder" style="width: 15px; height: 15px; color: var(--primary-cyan); flex-shrink: 0;"></i>
+                        <select id="selectVocabTargetFolder" style="width: 100%; background: transparent; border: none; color: #f1f5f9; font-size: 0.8rem; padding: 9px 0; outline: none; cursor: pointer;">
+                            <option value="Mặc định" style="background:#0f1424;">📁 Thư mục: Mặc định</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" id="btnSaveToNotebook" style="flex: 1.2; min-width: 160px; border-color: #fbbf24; color: #fbbf24; padding: 8px 12px; font-size: 0.8rem;">
+                        <i data-lucide="star"></i>
+                        <span id="btnSaveNotebookText">⭐ Lưu Vào Sổ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Notebook Modal (Sổ Từ Vựng Của Tôi - PRO) -->
+        <div class="modal-overlay" id="vocabNotebookModal" style="display:none;">
+            <div class="modal-card glass-panel" style="max-width: 680px;">
+                <button class="modal-close-btn" id="btnCloseNotebookModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="notebook-modal-header" style="margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="book-open-check" style="color: #fbbf24; width: 24px; height: 24px;"></i>
+                            <h2 style="font-size: 1.25rem; font-weight: 800;">Sổ Từ Vựng Của Tôi (<span id="notebookCount">0</span>)</h2>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn btn-primary" id="btnPracticeNotebookFlashcards" style="background: linear-gradient(135deg, #00f2fe, #4facfe); border: none; padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #000; gap: 6px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);">
+                                <i data-lucide="layers" style="width:15px; height:15px;"></i>
+                                <span id="btnPracticeFcLabel">🎴 Ôn Tập Thư Mục Này</span>
+                            </button>
+                            <span class="tag-pill gold" style="font-size:0.68rem;">PRO VIP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folder Navigation & Creation Bar -->
+                <div class="vocab-folder-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.06);">
+                    <div class="vocab-folder-chips" id="vocabFolderChips" style="display: flex; align-items: center; gap: 6px; overflow-x: auto; max-width: calc(100% - 100px); padding-bottom: 2px;">
+                        <!-- Dynamic Folder Pills -->
+                    </div>
+                    <button class="btn btn-secondary" id="btnCreateNewFolder" style="padding: 4px 10px; font-size: 0.74rem; border-color: var(--primary-cyan); color: var(--primary-cyan); white-space: nowrap; flex-shrink: 0; gap: 4px;">
+                        <i data-lucide="folder-plus" style="width: 14px; height: 14px;"></i>
+                        <span>+ Thư Mục</span>
+                    </button>
+                </div>
+
+                <div class="notebook-modal-body" style="max-height: 52vh; overflow-y: auto; margin-bottom: 12px;">
+                    <div class="notebook-list" id="notebookList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Render dynamic saved vocabulary items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time VietQR Payment Modal (Thanh Toán Ngân Hàng Realtime) -->
+        <div class="modal-overlay" id="paymentModal" style="display:none;">
+            <div class="modal-card glass-panel payment-card" style="max-width: 480px; text-align: center; border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 50px rgba(245, 158, 11, 0.2);">
+                <button class="modal-close-btn" id="btnClosePaymentModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="payment-modal-header" style="margin-bottom: 14px;">
+                    <div class="payment-shield-icon" style="width: 52px; height: 52px; margin: 0 auto 10px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); border: 2px solid #f59e0b; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="qr-code" style="width: 28px; height: 28px; color: #f59e0b;"></i>
+                    </div>
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff;" id="paymentPlanTitle">Thanh Toán Gói PRO</h2>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                        Quét mã VietQR bằng bất kỳ App Ngân Hàng hoặc Ví Điện Tử
+                    </p>
+                </div>
+
+                <div class="payment-modal-body">
+                    <!-- Dynamic VietQR Container -->
+                    <div class="vietqr-box" style="background: #ffffff; padding: 14px; border-radius: var(--radius-md); display: inline-block; box-shadow: 0 8px 24px rgba(0,0,0,0.4); margin-bottom: 14px;">
+                        <img src="" alt="Mã VietQR" id="paymentQrImg" style="width: 220px; height: 220px; display: block; border-radius: 6px;">
+                    </div>
+
+                    <!-- Payment Details Table -->
+                    <div class="payment-details-card" style="background: rgba(0,0,0,0.35); border: 1px solid var(--bg-glass-border); border-radius: var(--radius-md); padding: 12px 16px; text-align: left; margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span style="color: var(--text-muted);">Số tiền thanh toán:</span>
+                            <strong style="color: #fbbf24; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace;" id="paymentAmountText">2.000đ</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.82rem;">
+                            <span style="color: var(--text-muted);">Nội dung chuyển khoản:</span>
+                            <strong style="color: var(--primary-cyan); font-family: 'JetBrains Mono', monospace;" id="paymentDescText">CSPRO123456</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.82rem;">
+                            <span style="color: var(--text-muted);">Ngân hàng thụ hưởng:</span>
+                            <span style="color: var(--text-primary);" id="paymentBankText">MBBank (Quân Đội)</span>
+                        </div>
+                    </div>
+
+                    <!-- Live PayOS Realtime Status -->
+                    <div class="payos-status-box" id="payosStatusBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 12px 14px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #10b981; font-weight: 700; font-size: 0.85rem; margin-bottom: 12px;">
+                        <i data-lucide="loader-2" class="animate-spin" id="payosStatusSpinner" style="width: 18px; height: 18px; color: #10b981;"></i>
+                        <span id="payosStatusMessage">Đang chờ nhận tiền vào tài khoản MBBank...</span>
+                    </div>
+
+                    <button class="btn btn-secondary" id="btnConfirmPaymentPaid" style="width: 100%; padding: 11px; font-size: 0.88rem; border-color: rgba(255, 255, 255, 0.2);">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Kiểm Tra Trạng Thái Thanh Toán</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dedicated PRO Upgrade Modal (Hết Lượt Dùng Thử - Nâng Cấp PRO) -->
+        <div class="modal-overlay" id="proUpgradeModal" style="display:none;">
+            <div class="modal-card glass-panel pro-upgrade-popup-card">
+                <button class="modal-close-btn" id="btnCloseProUpgradeModal">
+                    <i data-lucide="x"></i>
+                </button>
+                
+                <div class="pro-modal-hero">
+                    <div class="pro-crown-halo">
+                        <i data-lucide="crown" style="width: 34px; height: 34px; color: #fbbf24;"></i>
+                    </div>
+                    <h2 class="pro-upgrade-title" id="proUpgradeModalTitle">Hết 3 Lượt Dùng Thử Miễn Phí</h2>
+                    <p class="pro-upgrade-subtitle" id="proUpgradeModalSubtitle">
+                        Bạn đã trải nghiệm xong 3 lượt luyện nói AI miễn phí. Nâng cấp lên <strong style="color:#fbbf24;">PRO VIP</strong> để luyện tập không giới hạn và bứt phá phản xạ tiếng Trung!
+                    </p>
+                </div>
+
+                <div class="pro-benefits-grid">
+                    <div class="benefit-item">
+                        <div class="b-icon"><i data-lucide="mic"></i></div>
+                        <div class="b-info">
+                            <strong>Luyện Nói AI Không Giới Hạn</strong>
+                            <span>Ghi âm & chấm điểm phát âm không hạn chế số câu</span>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="b-icon"><i data-lucide="sparkles"></i></div>
+                        <div class="b-info">
+                            <strong>Phân Tích Thanh Điệu 100%</strong>
+                            <span>Chỉ rõ từng âm sai, thanh 1/2/3/4 kèm mẹo sửa tức thì</span>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="b-icon"><i data-lucide="layers"></i></div>
+                        <div class="b-info">
+                            <strong>Flashcard 3D Từ Video</strong>
+                            <span>Tự động trích xuất từ vựng HSK cốt lõi từ mọi link YouTube</span>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="b-icon"><i data-lucide="book-marked"></i></div>
+                        <div class="b-info">
+                            <strong>Tra Từ Điển Đa Nghĩa & Sổ Từ Vựng</strong>
+                            <span>Phân loại từ, ngữ cảnh thực tế & đồng bộ Cloud đa thiết bị</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pro-modal-pricing-row">
+                    <!-- Gói 7 ngày -->
+                    <div class="pro-quick-card" id="cardUpgradeWeek">
+                        <div class="p-header">
+                            <span class="p-name">Gói PRO 7 Ngày</span>
+                            <span class="p-price">2.000đ</span>
+                        </div>
+                        <div class="p-desc">Chỉ ~280đ/ngày trải nghiệm trọn vẹn</div>
+                        <button class="btn btn-secondary btn-quick-upgrade" id="btnUpgradeWeekModal">
+                            <i data-lucide="zap"></i>
+                            <span>Nâng Cấp 2.000đ</span>
+                        </button>
+                    </div>
+
+                    <!-- Gói 30 ngày -->
+                    <div class="pro-quick-card featured" id="cardUpgradeMonth">
+                        <span class="ribbon-best">KHUYÊN DÙNG</span>
+                        <div class="p-header">
+                            <span class="p-name">Gói PRO 30 Ngày</span>
+                            <span class="p-price gold">3.000đ</span>
+                        </div>
+                        <div class="p-desc">Chỉ 100đ/ngày học tiếng Trung đỉnh cao</div>
+                        <button class="btn btn-primary btn-quick-upgrade" id="btnUpgradeMonthModal" style="background: linear-gradient(135deg, #f59e0b, #d97706); color:#000; font-weight:800; border:none;">
+                            <i data-lucide="crown"></i>
+                            <span>Nâng Cấp 3.000đ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pro-modal-trust">
+                    <i data-lucide="shield-check" style="width:16px; height:16px; color:#10b981;"></i>
+                    <span>Thanh toán bảo mật qua VietQR Ngân Hàng MBBank / PayOS tự động kích hoạt sau 3 giây</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase App & Auth SDK v10 (compat for easy integration) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config & Auth Manager -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
+
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- App Logic Script -->
+    <script src="js/app.js?v=2.3"></script>
+</body>
+</html>
