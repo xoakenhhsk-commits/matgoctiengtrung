@@ -2,269 +2,178 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trở Về Năm 1999: Dị Tượng Y2K | Retro RPG Game Masterpiece</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trở Về Năm 1999: Dị Tượng Y2K | 3D Action RPG Game</title>
     <link rel="stylesheet" href="/static/css/game.css">
+    <!-- Three.js WebGL Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- CRT SCANLINE & VIGNETTE EFFECTS -->
+    <!-- CRT SCANLINE & VIGNETTE FILTERS -->
     <div class="crt-overlay"></div>
     <div class="crt-vignette"></div>
 
-    <div class="game-viewport">
-        <!-- HEADER CONSOLE -->
-        <header class="game-header">
-            <div class="brand-title">
-                <span class="brand-logo-glow">⏳</span>
+    <!-- FULLSCREEN 3D WEBGL CANVAS -->
+    <div id="canvas3dContainer"></div>
+
+    <!-- 3D HUD OVERLAY (FLOATING ON 3D WORLD) -->
+    <div class="hud-overlay">
+        <!-- TOP HUD BAR -->
+        <header class="top-hud-bar">
+            <!-- PLAYER STATUS BADGE -->
+            <div class="player-status-badge">
+                <div class="hud-player-name">
+                    <span id="hudPlayerName">Kẻ Ghi Nhớ (3D)</span>
+                    <span id="hudPlayerRole" style="color:var(--neon-amber); font-size:0.75rem;">LV.1</span>
+                </div>
+
+                <!-- HP Bar -->
                 <div>
-                    <h1 class="brand-name">TRỞ VỀ NĂM 1999</h1>
-                    <div class="brand-sub">THE Y2K PARADOX • RETRO RPG A-Z</div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:#f43f5e; margin-bottom:2px;">
+                        <span>❤️ HP</span>
+                        <span id="hudHpText">100/100</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill hp" id="hudHpFill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Chrono Bar -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:#00f0ff; margin-bottom:2px;">
+                        <span>⏳ CHRONO</span>
+                        <span id="hudChronoText">100/100</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill chrono" id="hudChronoFill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- EXP Bar -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:#fbbf24; margin-bottom:2px;">
+                        <span>⭐ EXP</span>
+                        <span id="hudExpText">0/100</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar-fill exp" id="hudExpFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Gold -->
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:800; color:var(--neon-amber); border-top:1px solid rgba(255,255,255,0.1); padding-top:4px;">
+                    <span>💰 VÍ TIỀN 1999:</span>
+                    <span id="hudGoldText">60 Xu</span>
                 </div>
             </div>
 
-            <div class="header-controls">
-                <button class="retro-btn amber" id="btnOpenShopHeader" title="Mở Cửa Hàng 1999">
+            <!-- CONTROLS GUIDE (PC) -->
+            <div class="controls-guide-badge">
+                <div>🎮 ĐIỀU KHIỂN 3D: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Chạy | <kbd>Space</kbd> Nhảy</div>
+                <div style="margin-top:4px;">⚔️ TẤN CÔNG: <kbd>Click Chuột</kbd> hoặc <kbd>J</kbd> | 💬 NÓI CHUYỆN: <kbd>E</kbd></div>
+            </div>
+
+            <!-- HEADER ACTIONS -->
+            <div class="header-actions">
+                <button class="retro-btn amber" id="btnOpenShopHeader">
                     <span>🛍️</span>
-                    <span>CỬA HÀNG</span>
+                    <span>SHOP</span>
                 </button>
-                <button class="retro-btn" id="btnToggleSound" title="Bật/Tắt Âm Thanh Retro">
+                <button class="retro-btn" id="btnToggleSound">
                     <span id="soundIcon">🔊</span>
-                    <span>ÂM THANH</span>
                 </button>
-                <button class="retro-btn" id="btnSaveGame" title="Lưu Game">
+                <button class="retro-btn" id="btnSaveGame">
                     <span>💾</span>
-                    <span>LƯU</span>
                 </button>
-                <button class="retro-btn pink" id="btnResetGame" title="Chơi Lại">
+                <button class="retro-btn pink" id="btnResetGame">
                     <span>🔄</span>
-                    <span>REBOOT</span>
                 </button>
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
-        <main class="game-main-grid">
-            <!-- SIDEBAR: PLAYER HUD STATUS -->
-            <aside class="player-hud-card">
-                <div class="hud-avatar-box">
-                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999_hero" alt="Player Avatar" class="hud-avatar-img">
-                    <div class="hud-player-name" id="hudPlayerName">Kẻ Ghi Nhớ</div>
-                    <div class="hud-player-role" id="hudPlayerRole">LV.1 • Người Du Hành Thời Gian</div>
+        <!-- PROXIMITY INTERACTION BANNER -->
+        <div class="interaction-prompt-banner" id="interactionPrompt">
+            <span>💬 NHẤN [E] HOẶC BẤM VÀO ĐÂY ĐỂ NÓI CHUYỆN</span>
+        </div>
+
+        <!-- BOTTOM DIALOGUE BAR (VISUAL NOVEL OVERLAY ON 3D) -->
+        <div class="bottom-dialogue-wrap">
+            <div class="dialogue-box-card">
+                <div class="speaker-avatar-wrap">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999_hero" alt="Speaker" class="speaker-avatar-img" id="speakerAvatarImg">
+                    <span class="speaker-name-badge" id="speakerNameBadge">Kẻ Ghi Nhớ</span>
+                    <span class="speaker-role-text" id="speakerRoleText" style="font-size:0.7rem; color:#94a3b8;">Người Du Hành</span>
+                    <button class="retro-btn" id="btnOpenNpcChat" style="margin-top: 6px; font-size: 0.8rem; padding: 4px 8px; width: 100%; justify-content: center;">
+                        💬 Hỏi AI
+                    </button>
                 </div>
 
-                <!-- STATS BARS -->
-                <div class="stat-group">
-                    <div>
-                        <div class="stat-label-wrap">
-                            <span style="color:#f43f5e;">❤️ SINH LỰC (HP)</span>
-                            <span id="hudHpText">100/100</span>
-                        </div>
-                        <div class="stat-bar-container">
-                            <div class="stat-bar-fill hp" id="hudHpFill" style="width: 100%;"></div>
-                        </div>
+                <div class="dialogue-content-area">
+                    <div class="dialogue-text-body" id="dialogueTextBody">
+                        Chào mừng bạn đến với Thành Phố 3D Năm 1999! Hãy dùng phím WASD để di chuyển, tiếp cận các NPC để nhận nhiệm vụ và bắn hạ Robot Lỗi Y2K!
                     </div>
 
-                    <div>
-                        <div class="stat-label-wrap">
-                            <span style="color:#00f0ff;">⏳ NĂNG LƯỢNG CHRONO</span>
-                            <span id="hudChronoText">100/100</span>
-                        </div>
-                        <div class="stat-bar-container">
-                            <div class="stat-bar-fill chrono" id="hudChronoFill" style="width: 100%;"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="stat-label-wrap">
-                            <span style="color:#fbbf24;">⭐ KINH NGHIỆM (EXP)</span>
-                            <span id="hudExpText">0/100</span>
-                        </div>
-                        <div class="stat-bar-container">
-                            <div class="stat-bar-fill exp" id="hudExpFill" style="width: 0%;"></div>
-                        </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.8); padding:8px 12px; border-radius:6px; border:1px solid rgba(251,191,36,0.3);">
-                        <span style="color:var(--neon-amber); font-weight:700; font-size:0.85rem;">💰 TIỀN XU 1999:</span>
-                        <span id="hudGoldText" style="font-weight:800; color:#fff;">60 Xu</span>
+                    <div class="dialogue-choices-list" id="dialogueChoicesList">
+                        <!-- Choices rendered dynamically -->
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- INVENTORY -->
-                <div>
-                    <div class="hud-section-title">
-                        <span>🎒 TÚI ĐỒ NĂM 1999</span>
-                    </div>
-                    <div class="item-chip-list" id="hudInventoryList" style="margin-top: 8px;">
-                        <!-- Items rendered dynamically -->
-                    </div>
-                </div>
-            </aside>
+        <!-- MOBILE TOUCH CONTROLS -->
+        <div class="mobile-controls-wrap">
+            <div class="touch-joystick-zone" id="touchJoystickZone">
+                <div class="touch-joystick-knob" id="touchJoystickKnob"></div>
+            </div>
+        </div>
 
-            <!-- STAGE: LOCATION & VISUAL NOVEL DIALOGUE -->
-            <section class="game-stage-container">
-                <!-- LOCATION HERO CARD -->
-                <div class="location-hero-card" id="locationHeroCard">
-                    <div>
-                        <div class="location-badge-row">
-                            <h2 class="location-name" id="locationName">Quán Net Quay Số 'Thiên Niên Kỷ'</h2>
-                            <span class="location-timestamp" id="locationTimestamp">31/12/1999 - 21:00</span>
-                        </div>
-                        <p class="location-desc-text" id="locationDescText">
-                            Tiếng modem 56k rít tít tít quen thuộc. Màn hình CRT phát ra ánh sáng xanh le lói giữa khói thuốc và những đĩa mềm 1.44MB.
-                        </p>
-                    </div>
-
-                    <div>
-                        <div style="font-family: var(--font-retro); font-size: 1.1rem; color: var(--neon-amber);">
-                            🗺️ BẢN ĐỒ THÀNH PHỐ NĂM 1999:
-                        </div>
-                        <div class="map-chips-bar" id="mapChipsBar">
-                            <!-- Map chips rendered dynamically -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VISUAL NOVEL DIALOGUE CARD -->
-                <div class="dialogue-box-card">
-                    <div class="speaker-avatar-wrap">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999_hero" alt="Speaker" class="speaker-avatar-img" id="speakerAvatarImg">
-                        <span class="speaker-name-badge" id="speakerNameBadge">Kẻ Ghi Nhớ</span>
-                        <span class="speaker-role-text" id="speakerRoleText">Nhân vật chính</span>
-                        <button class="retro-btn" id="btnOpenNpcChat" style="margin-top: 10px; font-size: 0.85rem; padding: 4px 8px; width: 100%; justify-content: center;">
-                            💬 Hỏi NPC (AI)
-                        </button>
-                    </div>
-
-                    <div class="dialogue-content-area">
-                        <div class="dialogue-text-body" id="dialogueTextBody">
-                            Đang tải dữ liệu không-thời gian năm 1999...
-                        </div>
-
-                        <div class="dialogue-choices-list" id="dialogueChoicesList">
-                            <!-- Interactive Choices rendered dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
+        <div class="mobile-action-buttons">
+            <button class="mobile-btn" id="btnMobileAttack" onclick="if(window.playerController) window.playerController.shootPlasmaBolt();">⚔️</button>
+            <button class="mobile-btn pink" id="btnMobileJump" onclick="if(window.playerController && window.playerController.isGrounded) { window.playerController.velocity.y = window.playerController.jumpForce; window.playerController.isGrounded = false; }">⬆️</button>
+        </div>
     </div>
 
     <!-- RETRO 1999 SHOP MODAL -->
     <div class="battle-arena-modal" id="shopModal">
-        <div class="battle-arena-card" style="max-width: 650px;">
+        <div class="battle-arena-card">
             <div class="battle-header">
-                <div class="battle-title">🛍️ TIỆM TẠP HÓA THẬP NIÊN 90</div>
+                <div class="battle-title">🛍️ TIỆM TẠP HÓA 3D THẬP NIÊN 90</div>
                 <button class="retro-btn pink" id="btnCloseShop" style="padding: 4px 10px; font-size: 0.9rem;">✕ Đóng</button>
             </div>
             <div style="color:var(--neon-amber); font-weight:700;">Ví của bạn: <span id="shopPlayerGold">60 Xu</span></div>
             <div class="shop-items-grid" id="shopItemsGrid">
-                <!-- Shop items rendered dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- DOS HACKING TERMINAL MODAL -->
-    <div class="battle-arena-modal" id="dosModal">
-        <div class="battle-arena-card" style="max-width: 620px;">
-            <div class="battle-header">
-                <div class="battle-title" style="color:var(--neon-green);">💻 TERMINAL MS-DOS BẺ KHÓA Y2K</div>
-                <button class="retro-btn pink" id="btnCloseDos" style="padding: 4px 10px; font-size: 0.9rem;">✕ Đóng</button>
-            </div>
-            <div class="battle-log-terminal" id="dosTerminalLog" style="height: 180px; color:var(--neon-green);">
-                <!-- DOS output -->
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="dosInput" placeholder="Nhập mã lệnh giải mã..." style="flex:1; background:#020617; border:1px solid var(--neon-green); color:var(--neon-green); padding:10px 14px; border-radius:6px; font-family:var(--font-retro); font-size:1.1rem; outline:none;">
-                <button class="retro-btn" id="btnSubmitDos" style="border-color:var(--neon-green); color:var(--neon-green);">
-                    <span>EXECUTE</span>
-                </button>
+                <!-- Shop items -->
             </div>
         </div>
     </div>
 
     <!-- AI NPC FREE CHAT MODAL -->
     <div class="battle-arena-modal" id="npcChatModal">
-        <div class="battle-arena-card" style="max-width: 600px;">
-            <div class="battle-header">
-                <div class="battle-title" id="npcChatTitle">💬 TRÒ CHUYỆN VỚI NPC NĂM 1999</div>
-                <button class="retro-btn pink" id="btnCloseNpcChat" style="padding: 4px 10px; font-size: 0.9rem;">
-                    ✕ Đóng
-                </button>
-            </div>
-
-            <div class="battle-log-terminal" id="npcChatLog" style="height: 220px;">
-                <div>[KẾT NỐI MODEM 56K] Đang kết nối tới tâm trí NPC qua sóng thời gian...</div>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="npcChatInput" placeholder="Nhập câu hỏi bạn muốn hỏi NPC năm 1999..." style="flex:1; background:#020617; border:1px solid var(--border-neon); color:#fff; padding:10px 14px; border-radius:6px; font-family:var(--font-modern); font-size:0.95rem; outline:none;">
-                <button class="retro-btn" id="btnSendNpcChat">
-                    <span>Gửi</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TURN-BASED COMBAT ARENA MODAL -->
-    <div class="battle-arena-modal" id="battleArenaModal">
         <div class="battle-arena-card">
             <div class="battle-header">
-                <div class="battle-title">⚔️ CHIẾN TRƯỜNG KHÔNG GIAN NĂM 1999</div>
-                <button class="retro-btn pink" id="btnFleeBattle" style="padding: 4px 10px; font-size: 0.9rem;">
-                    🏃 Rút Lui
-                </button>
+                <div class="battle-title" id="npcChatTitle">💬 TRÒ CHUYỆN VỚI NPC NĂM 1999 (AI)</div>
+                <button class="retro-btn pink" id="btnCloseNpcChat" style="padding: 4px 10px; font-size: 0.9rem;">✕ Đóng</button>
             </div>
-
-            <!-- COMBATANTS DISPLAY -->
-            <div class="battle-combatants-row">
-                <!-- Player -->
-                <div class="combatant-card player">
-                    <div style="font-weight: 800; color: var(--border-neon);">Kẻ Ghi Nhớ (Bạn)</div>
-                    <div style="font-size: 0.85rem; margin: 4px 0;">HP: <span id="battlePlayerHpText">100/100</span></div>
-                    <div class="stat-bar-container">
-                        <div class="stat-bar-fill hp" id="battlePlayerHpFill" style="width: 100%;"></div>
-                    </div>
-                </div>
-
-                <div class="vs-badge">VS</div>
-
-                <!-- Enemy -->
-                <div class="combatant-card enemy">
-                    <img src="" alt="Enemy" id="battleEnemyAvatar" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--neon-pink);">
-                    <div style="font-weight: 800; color: var(--neon-pink);" id="battleEnemyName">Robot Lỗi Y2K</div>
-                    <div style="font-size: 0.85rem; margin: 4px 0;">HP: <span id="battleEnemyHpText">80/80</span></div>
-                    <div class="stat-bar-container">
-                        <div class="stat-bar-fill hp" id="battleEnemyHpFill" style="width: 100%;"></div>
-                    </div>
-                </div>
+            <div class="battle-log-terminal" id="npcChatLog">
+                <div>[KẾT NỐI MODEM 56K] Đang kết nối tới NPC qua sóng thời gian 3D...</div>
             </div>
-
-            <!-- TERMINAL BATTLE LOG -->
-            <div class="battle-log-terminal" id="battleLogTerminal">
-                <div>[HỆ THỐNG] Khởi tạo đấu trường chiến thuật theo lượt...</div>
-            </div>
-
-            <!-- COMBAT ACTIONS -->
-            <div>
-                <div style="font-family: var(--font-retro); font-size: 1.2rem; color: var(--neon-amber); margin-bottom: 8px;">
-                    ⚡ CHỌN KỸ NĂNG TẤN CÔNG:
-                </div>
-                <div class="battle-actions-grid" id="battleSkillsContainer">
-                    <!-- Skills rendered dynamically -->
-                </div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="npcChatInput" placeholder="Nhập câu hỏi bạn muốn hỏi NPC..." style="flex:1; background:#020617; border:1px solid var(--border-neon); color:#fff; padding:10px 14px; border-radius:6px; font-family:var(--font-modern); font-size:0.95rem; outline:none;">
+                <button class="retro-btn" id="btnSendNpcChat"><span>Gửi</span></button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- JAVASCRIPT GAME STACK -->
     <script src="/static/js/audio-engine.js"></script>
     <script src="/static/js/game-data.js"></script>
     <script src="/static/js/game-engine.js"></script>
-    <script>
-        if (window.lucide) window.lucide.createIcons();
-    </script>
+    <script src="/static/js/three-world.js"></script>
+    <script src="/static/js/player-controller.js"></script>
+    <script src="/static/js/enemy-ai-3d.js"></script>
+    <script src="/static/js/npc-3d.js"></script>
+    <script src="/static/js/main-3d-app.js"></script>
 </body>
 </html>
