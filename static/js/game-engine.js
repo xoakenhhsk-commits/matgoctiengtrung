@@ -1,6 +1,6 @@
 // ==========================================
-// 1999 RETRO RPG GAME ENGINE
-// State Management, Dialogue System, Turn-based Combat, Save/Load
+// 1999 RETRO RPG GAME ENGINE (EXPANDED A-Z)
+// Turn-based Combat, DOS Mini-game, Retro Shop, NPC AI Chat, Save/Load
 // ==========================================
 
 class RetroGameEngine {
@@ -15,6 +15,7 @@ class RetroGameEngine {
             maxChrono: 100,
             exp: 0,
             maxExp: 100,
+            gold: 60,
             inventory: ["pager_beeper", "cyber_potion"],
             currentLocationId: "loc_cyber_cafe",
             currentStoryNodeId: "intro"
@@ -52,6 +53,7 @@ class RetroGameEngine {
             soundIcon: document.getElementById('soundIcon'),
             btnSaveGame: document.getElementById('btnSaveGame'),
             btnResetGame: document.getElementById('btnResetGame'),
+            btnOpenShopHeader: document.getElementById('btnOpenShopHeader'),
             
             // HUD
             hudPlayerName: document.getElementById('hudPlayerName'),
@@ -62,6 +64,7 @@ class RetroGameEngine {
             hudChronoFill: document.getElementById('hudChronoFill'),
             hudExpText: document.getElementById('hudExpText'),
             hudExpFill: document.getElementById('hudExpFill'),
+            hudGoldText: document.getElementById('hudGoldText'),
             hudInventoryList: document.getElementById('hudInventoryList'),
 
             // Stage Location
@@ -97,7 +100,20 @@ class RetroGameEngine {
             npcChatTitle: document.getElementById('npcChatTitle'),
             npcChatLog: document.getElementById('npcChatLog'),
             npcChatInput: document.getElementById('npcChatInput'),
-            btnSendNpcChat: document.getElementById('btnSendNpcChat')
+            btnSendNpcChat: document.getElementById('btnSendNpcChat'),
+
+            // Retro Shop Modal
+            shopModal: document.getElementById('shopModal'),
+            btnCloseShop: document.getElementById('btnCloseShop'),
+            shopItemsGrid: document.getElementById('shopItemsGrid'),
+            shopPlayerGold: document.getElementById('shopPlayerGold'),
+
+            // DOS Hacking Terminal Modal
+            dosModal: document.getElementById('dosModal'),
+            btnCloseDos: document.getElementById('btnCloseDos'),
+            dosTerminalLog: document.getElementById('dosTerminalLog'),
+            dosInput: document.getElementById('dosInput'),
+            btnSubmitDos: document.getElementById('btnSubmitDos')
         };
     }
 
@@ -117,6 +133,21 @@ class RetroGameEngine {
                 localStorage.removeItem('retro_1999_save');
                 location.reload();
             }
+        });
+
+        // Shop Triggers
+        this.dom.btnOpenShopHeader?.addEventListener('click', () => this.openShop());
+        this.dom.btnCloseShop?.addEventListener('click', () => {
+            if (this.dom.shopModal) this.dom.shopModal.style.display = 'none';
+        });
+
+        // DOS Terminal Triggers
+        this.dom.btnCloseDos?.addEventListener('click', () => {
+            if (this.dom.dosModal) this.dom.dosModal.style.display = 'none';
+        });
+        this.dom.btnSubmitDos?.addEventListener('click', () => this.submitDosCode());
+        this.dom.dosInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.submitDosCode();
         });
 
         // NPC AI Free Chat
@@ -219,6 +250,9 @@ class RetroGameEngine {
         const expPercent = Math.max(0, Math.min(100, (this.player.exp / this.player.maxExp) * 100));
         this.dom.hudExpFill.style.width = `${expPercent}%`;
 
+        // Gold
+        if (this.dom.hudGoldText) this.dom.hudGoldText.textContent = `${this.player.gold || 0} Xu`;
+
         // Inventory list
         this.renderInventory();
     }
@@ -264,6 +298,93 @@ class RetroGameEngine {
             alert(`✨ Đã sử dụng ${item.name}!\nHồi phục ${item.healHp || 0} HP và ${item.healChrono || 0} Chrono Energy.`);
         } else {
             alert(`📋 [${item.name}]:\n${item.desc}`);
+        }
+    }
+
+    // ==========================================
+    // RETRO 1999 SHOP SYSTEM
+    // ==========================================
+    openShop() {
+        if (!this.dom.shopModal) return;
+        window.retroAudio?.playSelect();
+
+        if (this.dom.shopPlayerGold) this.dom.shopPlayerGold.textContent = `${this.player.gold || 0} Xu`;
+        this.dom.shopItemsGrid.innerHTML = '';
+
+        window.GAME_DATA.shopItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'shop-item-card';
+            card.innerHTML = `
+                <div style="font-weight:700; color:#fff; font-size:0.95rem;">📦 ${item.name}</div>
+                <div style="font-size:0.8rem; color:#94a3b8; margin: 4px 0;">${item.desc}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <span style="color:var(--neon-amber); font-weight:800;">💰 ${item.price} Xu</span>
+                    <button class="retro-btn" style="padding:4px 10px; font-size:0.85rem;" id="buy_${item.id}">Mua</button>
+                </div>
+            `;
+            card.querySelector(`#buy_${item.id}`).addEventListener('click', () => this.buyItem(item));
+            this.dom.shopItemsGrid.appendChild(card);
+        });
+
+        this.dom.shopModal.style.display = 'flex';
+    }
+
+    buyItem(item) {
+        if (this.player.gold < item.price) {
+            alert("⚠️ Bạn không đủ Tiền Xu! Hãy đánh quái hoặc giải đố để kiếm thêm xu.");
+            return;
+        }
+
+        this.player.gold -= item.price;
+        this.player.inventory.push(item.id);
+        window.retroAudio?.playVictory();
+        this.renderPlayerHud();
+        if (this.dom.shopPlayerGold) this.dom.shopPlayerGold.textContent = `${this.player.gold} Xu`;
+        alert(`🎉 Bạn đã mua thành công ${item.name}! Vật phẩm đã được thêm vào Túi Đồ.`);
+    }
+
+    // ==========================================
+    // DOS HACKING TERMINAL MINI-GAME
+    // ==========================================
+    openDosTerminal() {
+        if (!this.dom.dosModal) return;
+        window.retroAudio?.playTimeRewind();
+        this.dom.dosTerminalLog.innerHTML = `
+            <div>C:\\> Y2K_SECURITY_SYSTEM.EXE --VER 1999</div>
+            <div>[CẢNH BÁO] Hệ thống tường lửa mạng Dial-Up đang bị khóa!</div>
+            <div>[GỢI Ý] Nhập đúng mật mã giải cứu: 1999-Y2K-2000</div>
+        `;
+        if (this.dom.dosInput) this.dom.dosInput.value = '';
+        this.dom.dosModal.style.display = 'flex';
+        this.dom.dosInput?.focus();
+    }
+
+    submitDosCode() {
+        const code = this.dom.dosInput?.value.trim().toUpperCase();
+        if (!code) return;
+
+        window.retroAudio?.playTypewriter();
+
+        if (code === '1999-Y2K-2000' || code === '1999' || code === 'Y2K') {
+            window.retroAudio?.playVictory();
+            this.dom.dosTerminalLog.innerHTML += `
+                <div style="color:var(--neon-green); margin-top:8px;">> [SUCCESS] BẺ KHÓA THÀNH CÔNG! ACCESS GRANTED!</div>
+                <div style="color:var(--neon-amber);">> Nhận thưởng: +60 Tiền Xu, +50 EXP, +1 Pin Thời Gian!</div>
+            `;
+            this.player.gold += 60;
+            this.player.exp += 50;
+            if (!this.player.inventory.includes('chrono_battery')) this.player.inventory.push('chrono_battery');
+            this.renderPlayerHud();
+
+            setTimeout(() => {
+                this.dom.dosModal.style.display = 'none';
+                this.renderStoryNode('battle_corrupted_bot');
+            }, 1800);
+        } else {
+            window.retroAudio?.playDamage();
+            this.dom.dosTerminalLog.innerHTML += `
+                <div style="color:#ef4444;">> [ERROR] Sai mã lệnh! Gợi ý: Nhập chính xác '1999-Y2K-2000'</div>
+            `;
         }
     }
 
@@ -374,9 +495,15 @@ class RetroGameEngine {
             this.renderPlayerHud();
         }
 
-        // Trigger Battle or Next Story Node
-        if (choice.next === 'battle_corrupted_bot') {
+        // Action routing
+        if (choice.next === 'open_dos_terminal') {
+            this.openDosTerminal();
+        } else if (choice.next === 'open_shop_ui') {
+            this.openShop();
+        } else if (choice.next === 'battle_corrupted_bot') {
             this.startBattle('corrupted_bot', 'ch1_cyber_cafe');
+        } else if (choice.next === 'battle_dialup_phantom') {
+            this.startBattle('dialup_phantom', 'ch3_tower_entrance');
         } else if (choice.next === 'battle_boss_y2k') {
             this.startBattle('boss_y2k', 'victory_ending');
         } else {
@@ -429,7 +556,7 @@ class RetroGameEngine {
             const btn = document.createElement('button');
             btn.className = `battle-skill-btn ${skill.id === 'time_rewind' ? 'time-skill' : ''}`;
             btn.innerHTML = `
-                <div style="font-size:1rem;">⚡ ${skill.name}</div>
+                <div style="font-size:0.95rem;">⚡ ${skill.name}</div>
                 <div style="font-size:0.75rem; opacity:0.8;">Tiêu hao: ${skill.costChrono} Chrono</div>
             `;
             btn.addEventListener('click', () => this.executePlayerTurn(skill));
@@ -444,20 +571,26 @@ class RetroGameEngine {
         }
 
         this.player.chrono -= skill.costChrono;
-        this.renderPlayerHud();
 
         if (skill.id === 'time_rewind') {
             window.retroAudio?.playTimeRewind();
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + skill.heal);
             this.addBattleLog(`⏳ Bạn kích hoạt [Tua Ngược Thời Gian]! Hồi phục ${skill.heal} HP!`);
+        } else if (skill.id === 'chrono_burst') {
+            window.retroAudio?.playSkill();
+            const damage = skill.power + Math.floor(Math.random() * 20);
+            this.currentEnemy.hp = Math.max(0, this.currentEnemy.hp - damage);
+            this.addBattleLog(`🌟 TUYỆT CHIÊU [${skill.name}] giáng xuống gây ${damage} SÁT THƯƠNG SẤM SÉT!`);
         } else {
             window.retroAudio?.playAttack();
-            const damage = skill.power + Math.floor(Math.random() * 8);
+            const damage = skill.power + Math.floor(Math.random() * 10);
             this.currentEnemy.hp = Math.max(0, this.currentEnemy.hp - damage);
+            if (skill.id === 'strike') this.player.chrono = Math.min(this.player.maxChrono, this.player.chrono + 12);
             this.addBattleLog(`⚔️ Bạn tung chiêu [${skill.name}] gây ${damage} sát thương lên ${this.currentEnemy.name}!`);
         }
 
         this.updateBattleStatusUI();
+        this.renderPlayerHud();
 
         // Check Enemy Defeated
         if (this.currentEnemy.hp <= 0) {
@@ -483,7 +616,7 @@ class RetroGameEngine {
         // Check Player Defeated
         if (this.player.hp <= 0) {
             setTimeout(() => {
-                alert("💀 Bạn đã bị hạ gục trong Cơn Bão Y2K! Hệ thống sẽ tự động hồi sinh bạn với 50 HP.");
+                alert("💀 Bạn đã bị hạ gục trong Cơn Bão Y2K! Cỗ máy thời gian tự động cứu bạn với 50 HP.");
                 this.player.hp = 50;
                 this.dom.battleArenaModal.style.display = 'none';
                 this.renderPlayerHud();
@@ -494,15 +627,17 @@ class RetroGameEngine {
     handleBattleVictory() {
         window.retroAudio?.playVictory();
         this.addBattleLog(`🏆 CHIẾN THẮNG! ${this.currentEnemy.name} đã bị đánh bại!`);
-        this.addBattleLog(`⭐ Nhận được +${this.currentEnemy.expReward} EXP!`);
+        this.addBattleLog(`⭐ Nhận được +${this.currentEnemy.expReward} EXP và +${this.currentEnemy.goldReward || 30} Tiền Xu!`);
 
         this.player.exp += this.currentEnemy.expReward;
+        this.player.gold = (this.player.gold || 0) + (this.currentEnemy.goldReward || 30);
+
         if (this.player.exp >= this.player.maxExp) {
             this.player.level++;
             this.player.exp = 0;
-            this.player.maxHp += 20;
+            this.player.maxHp += 25;
             this.player.hp = this.player.maxHp;
-            alert(`🎉 CHÚC MỪNG! Bạn đã tăng lên LV.${this.player.level}! Mở khóa thêm sức mạnh thời gian!`);
+            alert(`🎉 CẤP ĐỘ MỚI! Bạn đã tăng lên LV.${this.player.level}! Sinh lực tối đa tăng lên ${this.player.maxHp}!`);
         }
 
         this.renderPlayerHud();
@@ -511,7 +646,7 @@ class RetroGameEngine {
         setTimeout(() => {
             this.dom.battleArenaModal.style.display = 'none';
             this.renderStoryNode(nextNode);
-        }, 1500);
+        }, 1600);
     }
 
     addBattleLog(msg) {

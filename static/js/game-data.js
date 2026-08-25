@@ -1,11 +1,11 @@
 // ==========================================
-// GAME DATA: REVERSE 1999 - THE Y2K PARADOX
-// Storyline, NPCs, Quests, Skills, Items, Maps
+// GAME DATA: REVERSE 1999 - THE Y2K PARADOX (EXPANDED A-Z EDITION)
+// Full 5 Chapters, NPCs, Quests, Skills, Items, Shop, Enemies, Endings
 // ==========================================
 
 window.GAME_DATA = {
     title: "TRỞ VỀ NĂM 1999: DỊ TƯỢNG Y2K",
-    version: "1.0.0 Cyber-Edition",
+    version: "2.5.0 Masterpiece A-Z Edition",
 
     // NPC DATABASE
     npcs: {
@@ -13,14 +13,14 @@ window.GAME_DATA = {
             id: "chronicler",
             name: "Kẻ Ghi Nhớ",
             title: "Người Du Hành Thời Gian",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999_hero",
             color: "#00f0ff"
         },
         lam_tinh: {
             id: "lam_tinh",
             name: "Lâm Tinh (ZeroCool)",
             title: "Hacker Quán Net Quay Số 56k",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=lam_tinh_hacker",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=lam_tinh_hacker_99",
             color: "#10b981",
             bio: "Chuyên gia bẻ khóa mạng BBS và máy chủ dial-up thập niên 90."
         },
@@ -28,29 +28,29 @@ window.GAME_DATA = {
             id: "vy_vy",
             name: "Vy Vy",
             title: "Chủ Tiệm Băng Đĩa Cassette",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=vy_vy_cassette",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=vy_vy_cassette_99",
             color: "#f43f5e",
             bio: "Cô gái bí ẩn sở hữu những cuộn băng chứa tần số kích hoạt cổng không gian."
         },
         inspector_truong: {
             id: "inspector_truong",
             name: "Thanh Tra Trương",
-            title: "Đặc Vụ Dòng Thời Gian",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=truong_detective",
+            title: "Đặc Vụ Quản Lý Dòng Thời Gian",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=truong_detective_99",
             color: "#fbbf24",
             bio: "Truy lùng những kẻ làm biến dạng dòng thời gian năm 1999."
         },
         y2k_bug: {
             id: "y2k_bug",
-            name: "Bóng Ma Thiên Niên Kỷ (Y2K Bug)",
+            name: "BÓNG MA THIÊN NIÊN KỶ (Y2K Core)",
             title: "Thực Thể Dữ Liệu Hỗn Loạn",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=y2k_core_anomaly",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=y2k_core_anomaly_boss",
             color: "#a855f7",
             bio: "Sinh vật sinh ra từ sự sụp đổ số liệu đồng hồ năm 2000."
         }
     },
 
-    // MAP LOCATIONS
+    // MAP LOCATIONS (5 FULL DISTRICTS)
     locations: [
         {
             id: "loc_cyber_cafe",
@@ -67,6 +67,14 @@ window.GAME_DATA = {
             icon: "disc",
             desc: "Những kệ băng cassette đầy ắp nhạc Hoa lời Việt và đĩa CD lấp lánh. Máy nghe nhạc Sony Walkman đang phát một điệu Synthwave bí ẩn.",
             bgGradient: "linear-gradient(135deg, #240a1e, #0d0410)"
+        },
+        {
+            id: "loc_neon_street",
+            name: "Phố Đêm Giao Thừa Rực Rỡ",
+            year: "31/12/1999 - 23:00",
+            icon: "map-pin",
+            desc: "Biển hiệu neon lấp lánh phản chiếu dưới cơn mưa phùn. Đám đông đang hồi hộp đếm ngược chào đón năm 2000 mà không hề hay biết dị tượng sắp ập đến.",
+            bgGradient: "linear-gradient(135deg, #1c0a2b, #090312)"
         },
         {
             id: "loc_clock_tower",
@@ -86,33 +94,66 @@ window.GAME_DATA = {
         }
     ],
 
-    // ITEMS DATABASE
+    // RETRO SHOP INVENTORY
+    shopItems: [
+        {
+            id: "cyber_potion",
+            name: "Nước Ngọt Lon Xanh 1999",
+            price: 20,
+            icon: "coffee",
+            desc: "Thức uống có ga giải khát, hồi phục ngay 40 HP.",
+            healHp: 40
+        },
+        {
+            id: "walkman_tape",
+            name: "Băng Cassette 'Khúc Ca Thời Gian'",
+            price: 45,
+            icon: "disc",
+            desc: "Phát điệu nhạc Synthwave, hồi 60 HP và 40 Chrono Energy.",
+            healHp: 60,
+            healChrono: 40
+        },
+        {
+            id: "floppy_disk",
+            name: "Đĩa Mềm Floppy Disk 1.44MB",
+            price: 50,
+            icon: "save",
+            desc: "Chứa mã nguồn bẻ khóa tường lửa Y2K do Lâm Tinh lập trình."
+        },
+        {
+            id: "chrono_battery",
+            name: "Pin Con Thỏ Siêu Cấp 1999",
+            price: 35,
+            icon: "battery-charging",
+            desc: "Nạp năng lượng tối đa cho Cỗ Máy Thời Gian (+60 Chrono).",
+            healChrono: 60
+        }
+    ],
+
+    // ALL ITEMS DATABASE
     items: [
+        {
+            id: "pager_beeper",
+            name: "Máy Nhắn Tin Beeper Motorola",
+            type: "key",
+            icon: "smartphone",
+            desc: "Nhận các tín hiệu cầu cứu bí ẩn từ tương lai với mã số 1999-2000."
+        },
         {
             id: "floppy_disk",
             name: "Đĩa Mềm Floppy Disk 1.44MB",
             type: "quest",
             icon: "save",
-            desc: "Chứa mã nguồn bẻ khóa tường lửa Y2K do Lâm Tinh lập trình.",
-            value: 50
+            desc: "Chứa mã nguồn bẻ khóa tường lửa Y2K do Lâm Tinh lập trình."
         },
         {
             id: "walkman_tape",
             name: "Băng Cassette 'Khúc Ca Thời Gian'",
             type: "consumable",
             icon: "disc",
-            desc: "Khi phát trên Walkman, hồi phục 60 HP và tăng 30 Năng lượng Thời gian.",
+            desc: "Khi phát trên Walkman, hồi phục 60 HP và tăng 40 Năng lượng Thời gian.",
             healHp: 60,
-            healChrono: 30,
-            value: 40
-        },
-        {
-            id: "pager_beeper",
-            name: "Máy Nhắn Tin Beeper Motorola",
-            type: "key",
-            icon: "smartphone",
-            desc: "Nhận các tín hiệu cầu cứu bí ẩn từ tương lai với mã số 1999-2000.",
-            value: 80
+            healChrono: 40
         },
         {
             id: "cyber_potion",
@@ -120,41 +161,63 @@ window.GAME_DATA = {
             type: "consumable",
             icon: "coffee",
             desc: "Thức uống giải khát tăng ngay 40 HP.",
-            healHp: 40,
-            value: 20
+            healHp: 40
+        },
+        {
+            id: "chrono_battery",
+            name: "Pin Con Thỏ Siêu Cấp 1999",
+            type: "consumable",
+            icon: "battery-charging",
+            desc: "Nạp đầy ngay 60 Năng lượng Thời gian (Chrono Energy).",
+            healChrono: 60
+        },
+        {
+            id: "master_y2k_key",
+            name: "Chìa Khóa Lõi Thời Gian 2000",
+            type: "key",
+            icon: "key",
+            desc: "Chìa khóa mở cổng Cỗ Máy Thời Gian để phá vỡ vòng lặp vĩnh cửu."
         }
     ],
 
-    // SKILLS
+    // PLAYER SKILLS (TURN-BASED)
     skills: [
         {
             id: "strike",
             name: "Đòn Đột Phá Dữ Liệu",
             costChrono: 0,
-            power: 25,
+            power: 28,
             icon: "zap",
-            desc: "Tấn công cơ bản gây 25 sát thương vật lý và nạp 10 Chrono."
+            desc: "Tấn công vật lý cơ bản gây 28-35 sát thương và hồi phục +12 Chrono."
         },
         {
             id: "y2k_hack",
-            name: "Bẻ Khóa Lỗi Y2K",
+            name: "Bẻ Khóa Lỗi Y2K (Virus Dial-up)",
             costChrono: 25,
-            power: 55,
+            power: 60,
             icon: "terminal",
-            desc: "Truyền virus số hóa gây 55 sát thương chí mạng và làm choáng kẻ địch 1 lượt."
+            desc: "Truyền mã độc số hóa gây 60-75 sát thương chí mạng."
         },
         {
             id: "time_rewind",
             name: "Tua Ngược Dòng Thời Gian",
             costChrono: 40,
             power: 0,
-            heal: 50,
+            heal: 55,
             icon: "rotate-ccw",
-            desc: "Đảo ngược dòng thời gian về 5 giây trước, hồi 50 HP và xóa mọi hiệu ứng xấu."
+            desc: "Đảo ngược dòng thời gian về 5 giây trước, hồi 55 HP và giải trừ trạng thái xấu."
+        },
+        {
+            id: "chrono_burst",
+            name: "Bão Thiên Niên Kỷ 2000 (Tuyệt Chiêu)",
+            costChrono: 60,
+            power: 110,
+            icon: "sparkles",
+            desc: "Giải phóng toàn bộ năng lượng thời gian, gây 110-130 sát thương sấm sét!"
         }
     ],
 
-    // STORY CHAPTERS & DIALOGUES
+    // FULL EXPANDED STORYLINE (CHAPTER 1 -> 5)
     story: {
         intro: {
             id: "intro",
@@ -212,25 +275,29 @@ window.GAME_DATA = {
             text: "'Này người anh em! Cậu cũng cảm nhận được dữ liệu thời gian đang bị xáo trộn đúng không? Tôi vừa phát hiện một lỗ hổng trong máy chủ trung tâm. Cầm lấy chiếc Đĩa Mềm 1.44MB này, chúng ta cần nạp mã giải cứu vào Tháp Đồng Hồ!'",
             choices: [
                 {
-                    text: "💾 Nhận Đĩa Mềm 1.44MB và bàn kế hoạch tác chiến",
+                    text: "💾 Nhận Đĩa Mềm 1.44MB và sẵn sàng bẻ khóa mạng",
                     next: "battle_corrupted_bot",
                     action: "gain_item",
                     item: "floppy_disk"
                 },
                 {
-                    text: "❓ Hỏi Lâm Tinh về nguồn gốc thực sự của Cơn Bão Y2K",
-                    next: "ch1_lam_lore"
+                    text: "💻 Thử chơi Mini-game Hacking 1999 trên máy tính",
+                    next: "minigame_hacking"
                 }
             ]
         },
 
-        ch1_lam_lore: {
-            id: "ch1_lam_lore",
+        minigame_hacking: {
+            id: "minigame_hacking",
             speaker: "lam_tinh",
-            text: "'Không đơn giản là lỗi 2 chữ số năm 00 đâu! Có một thực thể trí tuệ nhân tạo từ tương lai đang mượn sự cố này để đóng băng loài người vĩnh viễn ở năm 1999! Kìa, lính canh dữ liệu của nó đã tới!'",
+            text: "'Muốn bẻ khóa máy chủ 1999 à? Để tôi bật giao diện Terminal DOS cho cậu. Hãy nhập mã giải mã [1999-Y2K-2000] để nhận 50 Tiền Xu và Pin Thời Gian!'",
             choices: [
                 {
-                    text: "⚔️ Rút vũ khí chuẩn bị chiến đấu!",
+                    text: "⚡ Mở Terminal Bẻ Khóa DOS",
+                    next: "open_dos_terminal"
+                },
+                {
+                    text: "⚔️ Chuẩn bị vũ khí chiến đấu với Robot Tuần Tra",
                     next: "battle_corrupted_bot"
                 }
             ]
@@ -239,15 +306,15 @@ window.GAME_DATA = {
         ch1_cassette_shop: {
             id: "ch1_cassette_shop",
             speaker: "vy_vy",
-            text: "'Chào mừng đến với năm 1999. Tôi biết cậu sẽ đến. Cuộn băng Cassette này chứa tần số âm thanh có thể làm suy yếu lá chắn của Bóng Ma Thiên Niên Kỷ. Hãy giữ nó thật cẩn thận!'",
+            text: "'Chào mừng đến với năm 1999. Tôi biết cậu sẽ đến. Cuộn băng Cassette này chứa tần số âm thanh có thể làm suy yếu lá chắn của Bóng Ma Thiên Niên Kỷ. Cầm lấy cả Lon Nước Ngọt này nữa nhé!'",
             choices: [
                 {
                     text: "🎁 Nhận Băng Cassette & Nước Ngọt 1999",
-                    next: "ch2_prep_tower",
+                    next: "ch2_neon_street",
                     action: "gain_items_vyvy"
                 },
                 {
-                    text: "💬 Hỏi Vy Vy tại sao cô ấy lại biết trước mọi chuyện",
+                    text: "💬 Hỏi Vy Vy về bí mật vòng lặp thời gian",
                     next: "ch1_vy_lore"
                 }
             ]
@@ -259,19 +326,51 @@ window.GAME_DATA = {
             text: "'Bởi vì tôi đã trải qua đêm 31/12/1999 này hàng ngàn lần rồi... Cứ mỗi khi đồng hồ điểm 00:00, mọi thứ lại bị reset quay về vạch xuất phát. Chỉ có cậu mới phá vỡ được vòng lặp định mệnh này!'",
             choices: [
                 {
-                    text: "🔥 Quyết tâm tiến vào Tháp Đồng Hồ phá vỡ vòng lặp!",
-                    next: "ch2_prep_tower"
+                    text: "🔥 Tiến ra Phố Đêm Giao Thừa gặp Thanh Tra Trương",
+                    next: "ch2_neon_street"
                 }
             ]
         },
 
-        ch2_prep_tower: {
-            id: "ch2_prep_tower",
-            speaker: "chronicler",
-            text: "Các mốc thời gian đang sụp đổ. Đồng hồ lớn đã điểm 23:45. Bầu trời đêm rực sáng những vệt sấm chớp kỹ thuật số màu tím neon. Cánh cổng Tháp Đồng Hồ Thiên Niên Kỷ đã mở ra trước mắt.",
+        ch2_neon_street: {
+            id: "ch2_neon_street",
+            speaker: "inspector_truong",
+            text: "'Kẻ Ghi Nhớ! Tốt lắm, cậu đã có đủ Đĩa Mềm và Băng Cassette! Nhưng quái vật Bóng Ma Quay Số Dial-Up đang chắn đường lên Tháp Đồng Hồ. Hãy cùng tôi quét sạch chúng!'",
             choices: [
                 {
-                    text: "⚡ Tiến vào Phòng Thí Nghiệm Nghịch Lý đối đầu Trùm Y2K!",
+                    text: "⚔️ Tấn công Bóng Ma Quay Số Dial-Up!",
+                    next: "battle_dialup_phantom"
+                },
+                {
+                    text: "🛍️ Mở Tiệm Tạp Hóa 1999 mua thêm trang bị hồi máu",
+                    next: "open_shop_ui"
+                }
+            ]
+        },
+
+        ch3_tower_entrance: {
+            id: "ch3_tower_entrance",
+            speaker: "chronicler",
+            text: "Các mốc thời gian đang sụp đổ dữ dội. Đồng hồ lớn đã điểm 23:45. Bầu trời đêm rực sáng những vệt sấm chớp kỹ thuật số màu tím neon. Cánh cổng Tháp Đồng Hồ Thiên Niên Kỷ đã mở ra trước mắt bạn và các đồng đội!",
+            choices: [
+                {
+                    text: "⚡ Tiến vào Phòng Thí Nghiệm Nghịch Lý đối đầu Trùm Cuối Y2K!",
+                    next: "battle_boss_y2k"
+                },
+                {
+                    text: "💬 Hỏi ý kiến chiến thuật từ Lâm Tinh và Vy Vy",
+                    next: "ch3_team_briefing"
+                }
+            ]
+        },
+
+        ch3_team_briefing: {
+            id: "ch3_team_briefing",
+            speaker: "lam_tinh",
+            text: "'Nghe này: Hãy dùng kỹ năng [Bẻ Khóa Lỗi Y2K] khi Trùm bật lá chắn, và dùng [Tua Ngược Thời Gian] khi máu cậu xuống thấp. Đòn [Bão Thiên Niên Kỷ 2000] sẽ kết liễu nó hoàn toàn!'",
+            choices: [
+                {
+                    text: "🚀 Xông vào Phòng Thí Nghiệm - Quyết Chiến!",
                     next: "battle_boss_y2k"
                 }
             ]
@@ -280,10 +379,10 @@ window.GAME_DATA = {
         victory_ending: {
             id: "victory_ending",
             speaker: "chronicler",
-            text: "🎉 CHIẾN THẮNG HUY HOÀNG! Khi dòng mã giải mã cuối cùng được nạp vào lõi thời gian, tiếng chuông đồng hồ vang lên rộn rã: '00:00:00 - 01/01/2000'. Thế giới bước sang Thế Kỷ Mới bình an. Bạn đã hoàn thành xuất sắc sứ mệnh của Người Du Hành Thời Gian 1999!",
+            text: "🎉 CHIẾN THẮNG HUY HOÀNG (TRUE ENDING)! Khi dòng mã giải mã cuối cùng được nạp vào lõi thời gian, tiếng chuông đồng hồ vang lên rộn rã: '00:00:00 - 01/01/2000'. Bầu trời bừng sáng pháo hoa rực rỡ. Thế giới bước sang Thế Kỷ 21 bình an. Bạn đã trở thành Huyền Thoại Người Du Hành Thời Gian 1999!",
             choices: [
                 {
-                    text: "🔄 Chơi lại từ đầu với cấp độ cao hơn (New Game+)",
+                    text: "🔄 Khởi động lại vòng lặp cấp độ cao hơn (New Game+)",
                     next: "intro",
                     action: "restart_game"
                 }
@@ -297,18 +396,30 @@ window.GAME_DATA = {
             id: "corrupted_bot",
             name: "Robot Tuần Tra Lỗi Y2K (Bug Sentinel)",
             avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=sentinel_bug_99",
-            maxHp: 80,
+            maxHp: 85,
             attackPower: 15,
-            expReward: 50,
+            expReward: 60,
+            goldReward: 35,
             desc: "Cỗ máy canh gác bị virus thời gian xâm nhập, phóng ra các tia sét số hóa."
+        },
+        dialup_phantom: {
+            id: "dialup_phantom",
+            name: "Bóng Ma Quay Số Dial-Up 56k",
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=dialup_phantom_99",
+            maxHp: 120,
+            attackPower: 20,
+            expReward: 100,
+            goldReward: 60,
+            desc: "Thực thể âm thanh sinh ra từ tiếng rít modem, có khả năng làm nhiễu sóng não."
         },
         boss_y2k: {
             id: "boss_y2k",
             name: "BÓNG MA THIÊN NIÊN KỶ (Y2K Core Paradox)",
-            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=y2k_core_anomaly",
-            maxHp: 180,
-            attackPower: 22,
-            expReward: 200,
+            avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=y2k_core_anomaly_boss",
+            maxHp: 200,
+            attackPower: 26,
+            expReward: 250,
+            goldReward: 150,
             desc: "Trùm Cuối: Thực thể kiểm soát dòng thời gian muốn đóng băng nhân loại ở năm 1999."
         }
     }
