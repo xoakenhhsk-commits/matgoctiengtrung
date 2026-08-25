@@ -53,9 +53,10 @@ def get_video_metadata(video_id: str) -> dict:
         "youtube_url": f"https://www.youtube.com/watch?v={video_id}"
     }
 
-def merge_dialogue_fragments(raw_snippets: list) -> list[dict]:
+def clean_and_normalize_subtitles(raw_snippets: list) -> list[dict]:
     """
-    Kết hợp các mẩu phụ đề ngắn vụn của YouTube thành các câu hội thoại hoàn chỉnh và tự nhiên.
+    Chuẩn hóa và giữ nguyên vẹn 100% từng câu phụ đề theo từng mốc thời gian YouTube
+    chuẩn xác như web app 4you / Language Reactor / Migaku (Không bị nuốt câu, không bị gộp mất đoạn).
     """
     if not raw_snippets:
         return []
@@ -75,47 +76,31 @@ def merge_dialogue_fragments(raw_snippets: list) -> list[dict]:
             start = round(float(getattr(item, 'start', 0.0)), 2)
             duration = round(float(getattr(item, 'duration', 2.5)), 2)
 
-        # Loại bỏ các tag định dạng như [Âm nhạc], [Music], ♪, [Applause]
+        # Loại bỏ các tag âm thanh [Âm nhạc], [Music], ♪, ♫
         clean_text = re.sub(r'\[.*?\]|\(.*?\)|♪|♫|♬', '', text).strip()
-        if not clean_text or not re.search(r'[\u4e00-\u9fa5a-zA-Z0-9]', clean_text):
+        # Chuẩn hóa khoảng trắng và dấu xuống dòng
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+        if not clean_text:
             continue
 
         cleaned_snippets.append({
             "text": clean_text,
             "start": start,
             "end": round(start + duration, 2),
-            "duration": duration
+            "duration": max(duration, 0.8)
         })
 
     if not cleaned_snippets:
         return []
 
-    # Sắp xếp theo thứ tự thời gian
+    # Sắp xếp đúng theo thời gian phát trong video
     cleaned_snippets.sort(key=lambda s: s["start"])
+    return cleaned_snippets
 
-    merged_dialogues = []
-    curr = cleaned_snippets[0].copy()
-
-    for nxt in cleaned_snippets[1:]:
-        # Điều kiện ghép câu:
-        # 1. Câu hiện tại ngắn (< 10 ký tự) HOẶC thời lượng ngắn (< 2.8s)
-        # 2. Khoảng cách giữa 2 mẩu nhỏ (< 1.2s)
-        # 3. Câu hiện tại chưa kết thúc bằng dấu chấm câu (。！？!?.)
-        is_short = len(curr["text"]) < 12 or (curr["end"] - curr["start"]) < 3.0
-        gap = nxt["start"] - curr["end"]
-        is_close = gap < 1.2
-        no_end_punct = not re.search(r'[。！？!?.]\s*$', curr["text"])
-
-        if is_short and is_close and no_end_punct:
-            curr["text"] = f"{curr['text']} {nxt['text']}".strip()
-            curr["end"] = max(curr["end"], nxt["end"])
-            curr["duration"] = round(curr["end"] - curr["start"], 2)
-        else:
-            merged_dialogues.append(curr)
-            curr = nxt.copy()
-
-    merged_dialogues.append(curr)
-    return merged_dialogues
+def merge_dialogue_fragments(raw_snippets: list) -> list[dict]:
+    """Giữ nguyên 100% tất cả các câu phụ đề theo chuẩn 4you."""
+    return clean_and_normalize_subtitles(raw_snippets)
 
 def fetch_youtube_subtitles(video_id: str, video_title: str = "", video_author: str = "") -> list[dict]:
     """
