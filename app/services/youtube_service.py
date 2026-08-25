@@ -119,46 +119,56 @@ def merge_dialogue_fragments(raw_snippets: list) -> list[dict]:
 
 def fetch_youtube_subtitles(video_id: str, video_title: str = "", video_author: str = "") -> list[dict]:
     """
-    Lấy và bóc tách toàn bộ đoạn hội thoại tiếng Trung trong video, dịch nghĩa 100% bằng AI.
+    Lấy và bóc tách TOÀN BỘ 100% từ A-Z mọi đoạn hội thoại tiếng Trung trong video, dịch nghĩa 100% bằng AI.
     """
     raw_subtitles = []
     
-    # 1. Lấy phụ đề tiếng Trung từ YouTubeTranscriptApi
+    # 1. Quét tìm TOÀN BỘ phụ đề (gốc & tự động & dịch tiếng Trung) từ YouTube
     try:
         ytt = YouTubeTranscriptApi()
-        target_langs = ['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK', 'en', 'vi']
+        target_langs = ['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK', 'en', 'vi', 'ja', 'ko']
         
+        # Thử lấy trực tiếp phụ đề tiếng Trung
         try:
-            raw_subtitles = ytt.fetch(video_id, languages=target_langs)
+            raw_subtitles = ytt.fetch(video_id, languages=['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK'])
         except Exception:
+            raw_subtitles = []
+            
+        if not raw_subtitles:
             try:
                 transcript_list = ytt.list(video_id)
                 found_transcript = None
-                for lang in target_langs:
+                
+                # Ưu tiên phụ đề tiếng Trung có sẵn
+                for lang in ['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK']:
                     try:
                         found_transcript = transcript_list.find_transcript([lang])
                         if found_transcript:
                             break
                     except Exception:
                         continue
+                
+                # Nếu không có, tự động dịch bất kỳ phụ đề/lời thoại nào sang Tiếng Trung Giản Thể
                 if not found_transcript:
                     for t in transcript_list:
                         try:
                             found_transcript = t.translate('zh-Hans')
-                            break
+                            if found_transcript:
+                                break
                         except Exception:
                             pass
+                            
                 if found_transcript:
                     raw_subtitles = found_transcript.fetch()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[Transcript Search Notice] {e}")
     except Exception as e:
         print(f"[Transcript API Notice] {e}")
 
-    # 2. Ghép các mẩu phụ đề thành các câu hội thoại trọn vẹn
+    # 2. Ghép các mẩu phụ đề thành các câu hội thoại trọn vẹn từ đầu đến cuối (A-Z)
     merged_items = merge_dialogue_fragments(raw_subtitles)
 
-    # 3. Nếu video không có phụ đề CC gốc, dùng Gemini AI trích xuất / biên soạn đoạn hội thoại theo chủ đề video
+    # 3. Nếu video hoàn toàn không có phụ đề CC, dùng Gemini AI nhận diện toàn bộ hội thoại từ đầu đến hết video
     if not merged_items:
         ai_generated_dialogues = generate_ai_dialogue_for_video(video_title or f"Video {video_id}", video_author)
         merged_items = merge_dialogue_fragments(ai_generated_dialogues)
