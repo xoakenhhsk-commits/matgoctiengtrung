@@ -9,17 +9,17 @@ from app.services.pinyin_service import get_pinyin_with_tones, get_detailed_word
 
 # Các model có tốc độ phản hồi cao nhất và hạn mức Free Tier rộng rãi nhất trên Google AI Studio
 CANDIDATE_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest",
-    "gemini-3.1-flash-lite"
+    "gemini-3.7-flash",
+    "gemini-flash-latest"
 ]
 
-def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_type: str = "audio/webm", timeout: int = 4) -> str:
+def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_type: str = "audio/webm", timeout: int = 6) -> str:
     """
     Gọi Gemini API qua REST endpoint chính thức của Google AI Studio (tự động luân chuyển model khả dụng).
     """
@@ -43,7 +43,7 @@ def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_typ
         "contents": [{"parts": parts}],
         "generationConfig": {
             "temperature": 0.1,
-            "maxOutputTokens": 2048
+            "maxOutputTokens": 4096
         }
     }
 
@@ -91,7 +91,7 @@ Danh sách câu tiếng Trung:
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=10)
+                resp = requests.post(url, json=payload, timeout=5)
                 if resp.status_code == 200:
                     text_out = resp.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
                     lines = [l.strip() for l in text_out.strip().split("\n") if l.strip()]
@@ -116,43 +116,47 @@ Danh sách câu tiếng Trung:
 
 def translate_chinese_subtitles(subtitles_text_list: list[str]) -> list[str]:
     """
-    Dịch toàn bộ danh sách câu tiếng Trung trong video sang Tiếng Việt bằng Gemini AI Studio.
+    Dịch toàn bộ danh sách câu tiếng Trung trong video sang Tiếng Việt bằng Gemini AI Studio song song siêu tốc.
     """
     if not subtitles_text_list:
         return []
     
     api_key = get_gemini_api_key()
+    batch_size = 30
+    chunks = [subtitles_text_list[i:i + batch_size] for i in range(0, len(subtitles_text_list), batch_size)]
+    
+    # Dịch đa luồng song song (Parallel execution) để hoàn thành trong 1-2 giây
+    with ThreadPoolExecutor(max_workers=min(4, max(1, len(chunks)))) as executor:
+        results = list(executor.map(lambda c: translate_single_chunk(c, api_key), chunks))
+    
     all_translations = []
-    batch_size = 40
-
-    for i in range(0, len(subtitles_text_list), batch_size):
-        chunk = subtitles_text_list[i:i + batch_size]
-        chunk_translated = translate_single_chunk(chunk, api_key)
-        all_translations.extend(chunk_translated)
-        time.sleep(0.2)
+    for r in results:
+        all_translations.extend(r)
 
     return all_translations
 
 def generate_ai_dialogue_for_video(video_title: str, video_author: str) -> list[dict]:
     """
-    Dùng Gemini AI Studio trích xuất toàn bộ bộ hội thoại tiếng Trung hoàn chỉnh (15-30 câu) theo ngữ cảnh video.
+    Dùng Gemini AI Studio nhận diện và trích xuất TOÀN BỘ bộ hội thoại tiếng Trung đầy đủ trong video theo chủ đề và thời lượng.
     """
     api_key = get_gemini_api_key()
     if api_key:
         prompt = f"""
-        Bạn là chuyên gia biên soạn giáo trình tiếng Trung Shadowing.
+        Bạn là chuyên gia phân tích video và biên soạn giáo trình tiếng Trung Shadowing chuyên nghiệp.
         Video YouTube này có tiêu đề: "{video_title}" của kênh: "{video_author}".
-        Hãy trích xuất và biên soạn toàn bộ bộ câu thoại tiếng Trung (15-25 câu giao tiếp hoàn chỉnh từ cơ bản đến nâng cao) trải dài theo thời lượng video.
+        
+        Nhiệm vụ: Hãy trích xuất và tái tạo TOÀN BỘ tất cả các câu hội thoại tiếng Trung trong bài học này từ đầu đến cuối video (khoảng 30 - 60 câu hội thoại chi tiết, tự nhiên, chuẩn khẩu ngữ đời sống hoặc lời bài hát/bài giảng tương ứng với video).
         
         Mỗi câu cần có:
-        - start: float (mốc giây bắt đầu)
+        - start: float (mốc giây bắt đầu trong video, ví dụ 2.5, 6.0, 10.5,...)
         - duration: float (thời lượng phát âm 3.0-6.0s)
         - text: string (chữ Hán giản thể chuẩn ngữ pháp)
         
-        Trả về duy nhất định dạng JSON mảng object:
+        Hãy sắp xếp theo thứ tự thời gian từ giây đầu tiên đến hết bài.
+        Trả về DUY NHẤT định dạng JSON mảng object:
         [
-            {{"start": 2.5, "duration": 4.0, "text": "你好，请问今天我们学习什么内容？"}},
-            {{"start": 7.0, "duration": 4.5, "text": "今天我们要练习最地道的中文日常口语。"}}
+            {{"start": 2.0, "duration": 4.0, "text": "你好，请问今天我们学习什么内容？"}},
+            {{"start": 6.5, "duration": 4.5, "text": "今天我们要练习最地道的中文日常口语。"}}
         ]
         """
         try:
@@ -168,7 +172,7 @@ def generate_ai_dialogue_for_video(video_title: str, video_author: str) -> list[
         except Exception as e:
             print(f"[AI Dialogue Generation Notice] {e}")
 
-    # Mẫu fallback
+    # Mẫu fallback nếu không có mạng
     return [
         {"start": 2.5, "duration": 4.2, "text": "你好！欢迎来到中文影子跟读练习。"},
         {"start": 7.2, "duration": 4.8, "text": "今天我们要一起练习最地道的中文日常口语。"},
