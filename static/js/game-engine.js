@@ -88,7 +88,16 @@ class RetroGameEngine {
             battlePlayerHpFill: document.getElementById('battlePlayerHpFill'),
             battleLogTerminal: document.getElementById('battleLogTerminal'),
             battleSkillsContainer: document.getElementById('battleSkillsContainer'),
-            btnFleeBattle: document.getElementById('btnFleeBattle')
+            btnFleeBattle: document.getElementById('btnFleeBattle'),
+
+            // NPC AI Chat
+            btnOpenNpcChat: document.getElementById('btnOpenNpcChat'),
+            npcChatModal: document.getElementById('npcChatModal'),
+            btnCloseNpcChat: document.getElementById('btnCloseNpcChat'),
+            npcChatTitle: document.getElementById('npcChatTitle'),
+            npcChatLog: document.getElementById('npcChatLog'),
+            npcChatInput: document.getElementById('npcChatInput'),
+            btnSendNpcChat: document.getElementById('btnSendNpcChat')
         };
     }
 
@@ -108,6 +117,72 @@ class RetroGameEngine {
                 localStorage.removeItem('retro_1999_save');
                 location.reload();
             }
+        });
+
+        // NPC AI Free Chat
+        this.dom.btnOpenNpcChat?.addEventListener('click', () => {
+            const node = window.GAME_DATA.story[this.player.currentStoryNodeId];
+            const speaker = window.GAME_DATA.npcs[node?.speaker] || window.GAME_DATA.npcs.chronicler;
+            if (this.dom.npcChatTitle) this.dom.npcChatTitle.textContent = `💬 TRÒ CHUYỆN VỚI ${speaker.name.toUpperCase()} (AI)`;
+            if (this.dom.npcChatModal) {
+                this.dom.npcChatModal.style.display = 'flex';
+                this.dom.npcChatInput?.focus();
+            }
+        });
+
+        this.dom.btnCloseNpcChat?.addEventListener('click', () => {
+            if (this.dom.npcChatModal) this.dom.npcChatModal.style.display = 'none';
+        });
+
+        const sendNpcMsg = async () => {
+            const msg = this.dom.npcChatInput?.value.trim();
+            if (!msg) return;
+
+            const node = window.GAME_DATA.story[this.player.currentStoryNodeId];
+            const speaker = window.GAME_DATA.npcs[node?.speaker] || window.GAME_DATA.npcs.lam_tinh;
+
+            const pMsg = document.createElement('div');
+            pMsg.style.color = '#fff';
+            pMsg.textContent = `> Bạn: ${msg}`;
+            this.dom.npcChatLog.appendChild(pMsg);
+            this.dom.npcChatInput.value = '';
+
+            const loadingEntry = document.createElement('div');
+            loadingEntry.style.color = 'var(--neon-amber)';
+            loadingEntry.textContent = `... ${speaker.name} đang suy nghĩ ...`;
+            this.dom.npcChatLog.appendChild(loadingEntry);
+            this.dom.npcChatLog.scrollTop = this.dom.npcChatLog.scrollHeight;
+
+            window.retroAudio?.playTypewriter();
+
+            try {
+                const res = await fetch('/api/game/npc-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        npc_id: speaker.id,
+                        npc_name: speaker.name,
+                        npc_title: speaker.title,
+                        player_message: msg
+                    })
+                });
+                const data = await res.json();
+                loadingEntry.remove();
+
+                const replyEntry = document.createElement('div');
+                replyEntry.style.color = speaker.color || 'var(--neon-pink)';
+                replyEntry.textContent = `> ${speaker.name}: ${data.reply || "Tín hiệu bị nhiễu sóng năm 1999..."}`;
+                this.dom.npcChatLog.appendChild(replyEntry);
+                this.dom.npcChatLog.scrollTop = this.dom.npcChatLog.scrollHeight;
+                window.retroAudio?.playSelect();
+            } catch (e) {
+                loadingEntry.textContent = `> ${speaker.name}: 'Thời gian đang trôi nhanh quá, chỉ còn vài phút nữa là sang năm 2000 rồi!'`;
+            }
+        };
+
+        this.dom.btnSendNpcChat?.addEventListener('click', sendNpcMsg);
+        this.dom.npcChatInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendNpcMsg();
         });
 
         // Flee battle

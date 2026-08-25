@@ -1,11 +1,6 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
-youtube-transcript-api>=0.6.2
-yt-dlp>=2024.3.10
-pypinyin>=0.51.0
-google-genai>=0.1.1
 python-dotenv>=1.0.1
 requests>=2.31.0
+pydantic>=2.6.0
 aiofiles>=23.2.1
-jieba>=0.42.1
-payos>=0.3.0

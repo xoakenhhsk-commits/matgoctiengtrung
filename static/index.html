@@ -124,6 +124,9 @@
                         <img src="https://api.dicebear.com/7.x/bottts/svg?seed=chronicler_1999" alt="Speaker" class="speaker-avatar-img" id="speakerAvatarImg">
                         <span class="speaker-name-badge" id="speakerNameBadge">Kẻ Ghi Nhớ</span>
                         <span class="speaker-role-text" id="speakerRoleText">Nhân vật chính</span>
+                        <button class="retro-btn" id="btnOpenNpcChat" style="margin-top: 10px; font-size: 0.85rem; padding: 4px 8px; width: 100%; justify-content: center;">
+                            💬 Hỏi NPC (AI)
+                        </button>
                     </div>
 
                     <div class="dialogue-content-area">
@@ -138,6 +141,29 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- AI NPC FREE CHAT MODAL -->
+    <div class="battle-arena-modal" id="npcChatModal">
+        <div class="battle-arena-card" style="max-width: 600px;">
+            <div class="battle-header">
+                <div class="battle-title" id="npcChatTitle">💬 TRÒ CHUYỆN VỚI NPC NĂM 1999</div>
+                <button class="retro-btn pink" id="btnCloseNpcChat" style="padding: 4px 10px; font-size: 0.9rem;">
+                    ✕ Đóng
+                </button>
+            </div>
+
+            <div class="battle-log-terminal" id="npcChatLog" style="height: 220px;">
+                <div>[KẾT NỐI MODEM 56K] Đang kết nối tới tâm trí NPC qua sóng thời gian...</div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="npcChatInput" placeholder="Nhập câu hỏi bạn muốn hỏi NPC năm 1999..." style="flex:1; background:#020617; border:1px solid var(--border-neon); color:#fff; padding:10px 14px; border-radius:6px; font-family:var(--font-modern); font-size:0.95rem; outline:none;">
+                <button class="retro-btn" id="btnSendNpcChat">
+                    <span>Gửi</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- TURN-BASED COMBAT ARENA MODAL -->
