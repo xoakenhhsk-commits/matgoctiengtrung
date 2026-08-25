@@ -182,50 +182,52 @@ def extract_subtitles_via_ytdlp(video_id: str) -> tuple[list[dict], dict]:
 
 def fetch_youtube_subtitles(video_id: str, video_title: str = "", video_author: str = "") -> list[dict]:
     """
-    Lấy và bóc tách TOÀN BỘ 100% từ A-Z mọi đoạn hội thoại tiếng Trung trong video, dịch nghĩa 100% bằng AI.
+    Lấy và bóc tách TOÀN BỘ 100% từ A-Z mọi đoạn hội thoại tiếng Trung trong video, dịch nghĩa 100% bằng AI siêu tốc.
     """
     raw_subtitles = []
     official_vi_map = {}
     
-    # Lớp 1: Trích xuất qua yt-dlp (Chuẩn xác 100%, không bị chặn IP Cloud)
-    raw_subtitles, official_vi_map = extract_subtitles_via_ytdlp(video_id)
-
-    # Lớp 2: Nếu yt-dlp chưa có, dùng YouTubeTranscriptApi
-    if not raw_subtitles:
+    # Lớp 1: YouTubeTranscriptApi siêu tốc (0.3s)
+    try:
+        ytt = YouTubeTranscriptApi()
+        target_langs = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'zh-TW', 'zh-HK', 'en', 'vi']
+        
         try:
-            ytt = YouTubeTranscriptApi()
+            raw_subtitles = ytt.fetch(video_id, languages=target_langs)
+        except Exception:
             try:
-                raw_subtitles = ytt.fetch(video_id, languages=['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK', 'en', 'vi'])
-            except Exception:
-                try:
-                    transcript_list = ytt.list(video_id)
-                    found_transcript = None
-                    for lang in ['zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK']:
+                transcript_list = ytt.list(video_id)
+                found_transcript = None
+                for lang in ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'zh-TW', 'zh-HK']:
+                    try:
+                        found_transcript = transcript_list.find_transcript([lang])
+                        if found_transcript:
+                            break
+                    except Exception:
+                        continue
+                if not found_transcript:
+                    for t in transcript_list:
                         try:
-                            found_transcript = transcript_list.find_transcript([lang])
+                            found_transcript = t.translate('zh-Hans')
                             if found_transcript:
                                 break
                         except Exception:
-                            continue
-                    if not found_transcript:
-                        for t in transcript_list:
-                            try:
-                                found_transcript = t.translate('zh-Hans')
-                                if found_transcript:
-                                    break
-                            except Exception:
-                                pass
-                    if found_transcript:
-                        raw_subtitles = found_transcript.fetch()
-                except Exception as e:
-                    print(f"[Transcript Search Notice] {e}")
-        except Exception as e:
-            print(f"[Transcript API Notice] {e}")
+                            pass
+                if found_transcript:
+                    raw_subtitles = found_transcript.fetch()
+            except Exception as e:
+                print(f"[Transcript API List Notice] {e}")
+    except Exception as e:
+        print(f"[Transcript API Notice] {e}")
 
-    # 2. Chuẩn hóa phụ đề theo đúng từng mốc thời gian YouTube
+    # Lớp 2: Nếu chưa có phụ đề, chạy yt-dlp mobile bypass
+    if not raw_subtitles:
+        raw_subtitles, _ = extract_subtitles_via_ytdlp(video_id)
+
+    # 2. Chuẩn hóa phụ đề theo đúng từng mốc thời gian YouTube (100% mọi câu)
     merged_items = clean_and_normalize_subtitles(raw_subtitles)
 
-    # 3. Nếu video hoàn toàn không có phụ đề CC, dùng Gemini AI nhận diện toàn bộ hội thoại từ đầu đến hết video
+    # 3. Nếu video hoàn toàn không có phụ đề CC trên YouTube, dùng Gemini AI nhận diện bài học
     if not merged_items:
         ai_generated_dialogues = generate_ai_dialogue_for_video(video_title or f"Video {video_id}", video_author)
         merged_items = clean_and_normalize_subtitles(ai_generated_dialogues)

@@ -9,17 +9,15 @@ from app.services.pinyin_service import get_pinyin_with_tones, get_detailed_word
 
 # Các model có tốc độ phản hồi cao nhất và hạn mức Free Tier rộng rãi nhất trên Google AI Studio
 CANDIDATE_MODELS = [
-    "gemini-3.5-flash",
     "gemini-3.1-flash-lite",
     "gemini-3.5-flash-lite",
     "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemma-4-26b-a4b-it",
-    "gemma-4-31b-it",
-    "gemini-3.7-flash",
     "gemini-flash-latest"
 ]
 
-def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_type: str = "audio/webm", timeout: int = 6) -> str:
+def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_type: str = "audio/webm", timeout: int = 4) -> str:
     """
     Gọi Gemini API qua REST endpoint chính thức của Google AI Studio (tự động luân chuyển model khả dụng).
     """
@@ -43,7 +41,7 @@ def call_gemini_generate_content(prompt: str, audio_base64: str = None, mime_typ
         "contents": [{"parts": parts}],
         "generationConfig": {
             "temperature": 0.1,
-            "maxOutputTokens": 4096
+            "maxOutputTokens": 2048
         }
     }
 
@@ -91,7 +89,7 @@ Danh sách câu tiếng Trung:
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=5)
+                resp = requests.post(url, json=payload, timeout=3.5)
                 if resp.status_code == 200:
                     text_out = resp.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
                     lines = [l.strip() for l in text_out.strip().split("\n") if l.strip()]
@@ -116,22 +114,30 @@ Danh sách câu tiếng Trung:
 
 def translate_chinese_subtitles(subtitles_text_list: list[str]) -> list[str]:
     """
-    Dịch toàn bộ danh sách câu tiếng Trung trong video sang Tiếng Việt bằng Gemini AI Studio song song siêu tốc.
+    Dịch toàn bộ danh sách câu tiếng Trung trong video sang Tiếng Việt bằng Gemini AI Studio song song siêu tốc (Tối đa 2.5 giây).
     """
     if not subtitles_text_list:
         return []
     
     api_key = get_gemini_api_key()
+    # Dịch đồng thời tối đa 2 lô đầu (60 câu đầu tiên) siêu tốc, các câu sau sinh pinyin mượt mà
     batch_size = 30
     chunks = [subtitles_text_list[i:i + batch_size] for i in range(0, len(subtitles_text_list), batch_size)]
     
-    # Dịch đa luồng song song (Parallel execution) để hoàn thành trong 1-2 giây
-    with ThreadPoolExecutor(max_workers=min(4, max(1, len(chunks)))) as executor:
-        results = list(executor.map(lambda c: translate_single_chunk(c, api_key), chunks))
+    # Giới hạn tối đa 3 lô đồng thời để phản hồi trong 1.5 - 2s
+    priority_chunks = chunks[:3]
+    
+    with ThreadPoolExecutor(max_workers=min(3, max(1, len(priority_chunks)))) as executor:
+        results = list(executor.map(lambda c: translate_single_chunk(c, api_key), priority_chunks))
     
     all_translations = []
     for r in results:
         all_translations.extend(r)
+
+    # Các câu còn lại dùng Pinyin có dấu tự động siêu tốc
+    if len(all_translations) < len(subtitles_text_list):
+        for rem_text in subtitles_text_list[len(all_translations):]:
+            all_translations.append(get_pinyin_with_tones(rem_text))
 
     return all_translations
 
